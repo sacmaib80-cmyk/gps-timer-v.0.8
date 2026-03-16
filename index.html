@@ -529,7 +529,10 @@ backdrop-filter: blur(12px);
     width: calc(100vw - 24px);
   }
 }
-      .section{ margin-top: 12px; scroll-margin-top: 110px; }
+      .section{
+  margin-top: 12px;
+  scroll-margin-top: 140px;
+}
       .sectionHead{
         display:flex; align-items:center; justify-content:space-between; gap:10px;
         margin: 6px 2px 10px;
@@ -772,79 +775,7 @@ button:disabled{
   }
 }
 
-      /* overlays */
-     .overlay{
-  overscroll-behavior: contain;
-  position: fixed;
-  inset: 0;
-  background: rgba(2,6,23,.45);
-  display:none;
-  align-items:flex-end;
-  justify-content:center;
-  z-index: 9999;
-  pointer-events: auto;
-}
-      .overlay.show{ display:flex; }
-
-      .sheet{
-         touch-action: pan-y;
-        width: min(980px, 100vw);
-        max-height: 86vh;
-        background: rgba(255,255,255,.98);
-        border: 1px solid var(--border);
-        border-radius: 22px 22px 0 0;
-        box-shadow: var(--shadow);
-        overflow:hidden;
-        pointer-events: auto;
-      }
-      .sheetHead{
-        display:flex; align-items:center; justify-content:space-between; gap:10px;
-        padding: 12px 14px;
-        border-bottom: 1px solid var(--border);
-        background: linear-gradient(180deg, rgba(96,165,250,.12), rgba(255,255,255,.0));
-      }
-      .sheetGrid{
-        display:grid; gap:12px;
-        padding: 12px 14px 14px;
-        grid-template-columns: 1fr;
-      }
-      @media(min-width:820px){
-        .sheetGrid{ grid-template-columns: .9fr 1.1fr; }
-      }
-     .dayList, .dayView{
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  touch-action: pan-y;
-        max-height: 56vh;
-        overflow:auto;
-        border: 1px solid var(--border);
-        border-radius: 18px;
-        background: rgba(2,6,23,.03);
-        padding: 8px;
-      }
-      .dayBtn{
-        width:100%;
-        text-align:left;
-        padding: 10px 10px;
-        border-radius: 14px;
-        border: 1px solid transparent;
-        background: transparent;
-        font-weight: 900;
-        color: var(--ink);
-        cursor:pointer;
-      }
-      .dayBtn:hover{ background: rgba(96,165,250,.14); border-color: rgba(96,165,250,.22); }
-      .dayBtn.active{ background: rgba(34,197,94,.14); border-color: rgba(34,197,94,.22); }
-
-      .dayView{
-        max-height: 56vh;
-        overflow:auto;
-        border: 1px solid var(--border);
-        border-radius: 18px;
-        background: rgba(2,6,23,.03);
-        padding: 10px;
-      }
-
+     
       /* onboarding */
       .onboard{
         width: min(720px, calc(100vw - 24px));
@@ -2641,8 +2572,177 @@ linear-gradient(
     gap: 10px;
   }
 }
+}
+#historyBtn{
+  display:none !important;
+}
 
+#historyPage{
+  min-height: 100%;
+}
 
+#historyPage .container{
+  padding-top: 8px;
+  padding-bottom: 20px;
+}
+
+/* =========================
+   HISTORY PAGE v1
+========================= */
+
+.historyHero{
+  padding: 16px;
+}
+
+.historyHeroTop{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.historyTitle{
+  font-size:18px;
+  font-weight:900;
+  color:var(--ink);
+}
+
+.historySub{
+  margin-top:4px;
+  font-size:12px;
+  color:var(--muted);
+  line-height:1.45;
+}
+
+.historyRangeTabs{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.rangeTab{
+  border:0;
+  border-radius:999px;
+  padding:8px 12px;
+  font-size:12px;
+  font-weight:800;
+  background:rgba(255,255,255,.7);
+  color:var(--muted);
+  box-shadow:none;
+}
+
+.rangeTab.active{
+  background:rgba(255,255,255,.95);
+  color:var(--ink);
+  box-shadow:0 4px 12px rgba(15,23,42,.06);
+}
+
+.historyOverviewGrid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.statCard{
+  padding:14px;
+}
+
+.statLabel{
+  font-size:11px;
+  color:var(--muted);
+  font-weight:700;
+}
+
+.statValue{
+  margin-top:6px;
+  font-size:22px;
+  font-weight:900;
+  color:var(--ink);
+}
+
+.historyBlockTitle{
+  font-size:13px;
+  font-weight:900;
+  color:var(--ink);
+  margin-bottom:10px;
+}
+
+.historyChartStub{
+  height:180px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:18px;
+  background:rgba(2,6,23,.03);
+  color:var(--muted);
+  font-size:13px;
+  font-weight:700;
+  border:1px dashed rgba(15,23,42,.10);
+}
+
+.historyBreakdownGrid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.breakdownCard{
+  padding:14px;
+}
+
+.breakLabel{
+  font-size:12px;
+  font-weight:800;
+  color:var(--muted);
+}
+
+.breakValue{
+  margin-top:6px;
+  font-size:20px;
+  font-weight:900;
+  color:var(--ink);
+}
+
+.breakMeta{
+  margin-top:6px;
+  font-size:11px;
+  color:var(--muted);
+  line-height:1.4;
+}
+
+.historySelectedDay{
+  font-size:18px;
+  font-weight:900;
+  color:var(--ink);
+}
+
+.historySelectedTotal{
+  margin-top:4px;
+  margin-bottom:12px;
+  color:var(--muted);
+  font-size:12px;
+}
+
+@media (max-width: 640px){
+  .historyOverviewGrid,
+  .historyBreakdownGrid{
+    grid-template-columns:1fr;
+  }
+
+  .historyHeroTop{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .historyRangeTabs{
+    width:100%;
+  }
+
+  .rangeTab{
+    flex:1;
+    text-align:center;
+  }
 }
 </style>
 </head>
@@ -2776,11 +2876,11 @@ linear-gradient(
             </div>
 
             <div class="topNavWrap">
-              <div class="topNav">
-                <button class="navBtn active" type="button" onclick="scrollToId('sec-timer')">Timer</button>
-                <button class="navBtn" type="button" onclick="scrollToId('sec-today')">Today</button>
-                <button class="navBtn" type="button" onclick="scrollToId('sec-report')">Report</button>
-              </div>
+             <div class="topNav">
+  <button class="navBtn active" id="navTimerBtn" type="button" onclick="scrollToId('sec-timer')">Timer</button>
+  <button class="navBtn" id="navTodayBtn" type="button" onclick="scrollToId('sec-today')">Today</button>
+  <button class="navBtn" id="navReportBtn" type="button" onclick="scrollToId('sec-report')">Report</button>
+</div>
             </div>
           </div>
         </div>
@@ -2917,8 +3017,8 @@ linear-gradient(
             <div class="progressWrap">
               <div class="badge">Today's Total: <b id="todayTotal">0.0</b> / 100</div>
               <div class="miniRight">
-                <button id="historyBtn" class="secondary smallBtn" type="button">History</button>
-                <button id="undoBtn" class="secondary smallBtn" type="button" disabled>Undo</button>
+                <!-- <button id="historyBtn" class="secondary smallBtn" type="button">History</button> -->
+                <button id="undoBtn" class="secondary smallBtn" type="button" disabled>Undo</button>  
                 <button id="redoBtn" class="secondary smallBtn" type="button" disabled>Redo</button>
                 <button id="resetTodayBtn" class="danger smallBtn" type="button">Reset Today</button>
               </div>
@@ -3003,26 +3103,142 @@ linear-gradient(
     </div>
     </div>
 
-    <!-- HISTORY OVERLAY -->
-    <div class="overlay" id="overlay">
-      <div class="sheet">
-        <div class="sheetHead">
-          <div class="badge">History • <b id="histTitle">----</b></div>
-          <button id="closeOverlayBtn" class="secondary" type="button" style="padding:10px 12px;font-size:13px;">Close</button>
-        </div>
 
-        <div class="sheetGrid">
+    <!-- HISTORY PAGE -->
+   <section id="historyPage" class="page">
+  <div class="container">
+
+    <div class="section">
+      <div class="sectionHead">
+        <h2>📈 History</h2>
+      </div>
+
+      <div class="card historyHero">
+        <div class="historyHeroTop">
           <div>
-            <div class="hint" style="margin-bottom:8px;">Days</div>
-            <div class="dayList" id="dayList"></div>
+            <div class="historyTitle">Growth History</div>
+            <div class="historySub">ดูคะแนน การเติบโต หมวดเด่น และโน้ตย้อนหลัง</div>
           </div>
-          <div>
-            <div class="hint" style="margin-bottom:8px;">Selected Day</div>
-            <div class="dayView" id="dayView"></div>
+
+          <div class="historyRangeTabs">
+            <button class="rangeTab active" data-range="3d">3D</button>
+            <button class="rangeTab" data-range="7d">7D</button>
+            <button class="rangeTab" data-range="30d">30D</button>
+            <button class="rangeTab" data-range="all">All</button>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- 1) OVERVIEW -->
+    <div class="section">
+      <div class="sectionHead">
+        <h2>Overview</h2>
+      </div>
+
+      <div class="historyOverviewGrid">
+        <div class="card statCard">
+          <div class="statLabel">Total QPS</div>
+          <div class="statValue" id="histTotalQps">--</div>
+        </div>
+
+        <div class="card statCard">
+          <div class="statLabel">Avg / Day</div>
+          <div class="statValue" id="histAvgDay">--</div>
+        </div>
+
+        <div class="card statCard">
+          <div class="statLabel">Best Day</div>
+          <div class="statValue" id="histBestDay">--</div>
+        </div>
+
+        <div class="card statCard">
+          <div class="statLabel">Current Streak</div>
+          <div class="statValue" id="histCurrentStreak">--</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2) TREND -->
+    <div class="section">
+      <div class="sectionHead">
+        <h2>Trend</h2>
+      </div>
+
+      <div class="card">
+        <div class="historyBlockTitle">Daily QPS Trend</div>
+        <div class="historyChartStub" id="histTrendChart">
+          Chart coming soon
+        </div>
+      </div>
+    </div>
+
+    <!-- 3) CATEGORY BREAKDOWN -->
+    <div class="section">
+      <div class="sectionHead">
+        <h2>Category Breakdown</h2>
+      </div>
+
+      <div class="historyBreakdownGrid">
+        <div class="card breakdownCard">
+          <div class="breakLabel">Learning</div>
+          <div class="breakValue" id="histLearningScore">--</div>
+          <div class="breakMeta" id="histLearningMeta">--</div>
+        </div>
+
+        <div class="card breakdownCard">
+          <div class="breakLabel">Work/Project</div>
+          <div class="breakValue" id="histWorkScore">--</div>
+          <div class="breakMeta" id="histWorkMeta">--</div>
+        </div>
+
+        <div class="card breakdownCard">
+          <div class="breakLabel">Physical</div>
+          <div class="breakValue" id="histPhysicalScore">--</div>
+          <div class="breakMeta" id="histPhysicalMeta">--</div>
+        </div>
+
+        <div class="card breakdownCard">
+          <div class="breakLabel">Connection</div>
+          <div class="breakValue" id="histConnectionScore">--</div>
+          <div class="breakMeta" id="histConnectionMeta">--</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4) DAY DETAIL / QUEST LOG -->
+    <div class="section">
+      <div class="sectionHead">
+        <h2>Day Detail</h2>
+      </div>
+
+      <div class="card">
+        <div class="historyBlockTitle">Selected Day</div>
+        <div class="historySelectedDay" id="histSelectedDay">--</div>
+        <div class="historySelectedTotal" id="histSelectedTotal">Total: --</div>
+
+        <div class="list" id="histQuestLog">
+          <div class="hint">ยังไม่มีข้อมูล</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5) QUEST NOTES -->
+    <div class="section">
+      <div class="sectionHead">
+        <h2>Quest Notes</h2>
+      </div>
+
+      <div class="card">
+        <div class="historyBlockTitle">Notes Feed</div>
+        <div class="list" id="histNotesFeed">
+          <div class="hint">ยังไม่มีโน้ต</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
 
     <!-- ONBOARDING -->
     <div class="overlay" id="onOverlay">
@@ -3131,11 +3347,10 @@ linear-gradient(
     <button class="bottomNavBtn" type="button" data-page="appPage" data-target="timer">
       <span>⏱️</span>
       <span>Timer</span>
-    </button>
-    <button class="bottomNavBtn" type="button" data-page="appPage" data-target="today">
-      <span>📋</span>
-      <span>Today</span>
-    </button>
+  <button class="bottomNavBtn" type="button" data-page="historyPage">
+  <span>📈</span>
+  <span>History</span>
+</button>
     <button class="bottomNavBtn" type="button" data-page="appPage" data-target="menu">
       <span>☰</span>
       <span>Menu</span>
@@ -3177,6 +3392,9 @@ let notified = false
 let notificationMode = "quiet"   // "quiet" | "smart"
 let notificationSound = true
 let smartWarnSent = false
+
+let historyRange = "7d";   // "3d" | "7d" | "30d" | "all"
+let historySelectedDay = null;
 
   /* =========================
     STORAGE KEYS
@@ -3255,6 +3473,7 @@ let tabHeartbeat = null;
     if(!el) return;
     el.classList.toggle(name, !!onOff);
   }
+  
 
   /* =========================
     UTIL
@@ -3291,11 +3510,23 @@ let tabHeartbeat = null;
       .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
       .replaceAll('"',"&quot;").replaceAll("'","&#039;");
   }
-  function scrollToId(id){
-    const el = $(id);
-    if(!el) return;
-    el.scrollIntoView({ behavior:"smooth", block:"start" });
-  }
+ function scrollToId(id){
+  const target = $(id);
+  const scroller = document.getElementById("appPage");
+
+  if(!target || !scroller) return;
+
+  const topbar = document.querySelector(".topbar");
+  const topbarH = topbar ? topbar.getBoundingClientRect().height : 0;
+
+  const extraOffset = 10; // กันไม่ให้ชนหัว
+  const targetTop = target.offsetTop - topbarH - extraOffset;
+
+  scroller.scrollTo({
+    top: Math.max(0, targetTop),
+    behavior: "smooth"
+  });
+}
   function normQuestName(name){
     return (name || "").trim().replace(/\s+/g," ");
   }
@@ -3391,6 +3622,74 @@ function renderMultiTabState(){
     // ยังไม่ต้องโชว์ตลอด เดี๋ยวรก
     // เอาไว้ใช้ตอน user พยายาม start quest
   }
+}
+function getHistoryDaysByRange(range){
+  const allDays = listDays().slice().reverse(); // เก่า -> ใหม่
+
+  if(range === "all") return allDays;
+
+  const map = {
+    "3d": 3,
+    "7d": 7,
+    "30d": 30
+  };
+
+  const limit = map[range] || 7;
+  const today = localDateKey();
+
+  const wanted = [];
+  for(let i = limit - 1; i >= 0; i--){
+    wanted.push(addDays(today, -i));
+  }
+
+  return wanted;
+}
+function getHistorySummary(range){
+  const days = getHistoryDaysByRange(range);
+  const data = loadAll();
+
+  let totalQps = 0;
+  let totalActiveDays = 0;
+  let bestDayKey = "--";
+  let bestDayScore = 0;
+
+  days.forEach(dayKey => {
+    const day = data[dayKey];
+    const score = day ? Number(day.totalQps || 0) : 0;
+
+    totalQps += score;
+
+    if(score > 0){
+      totalActiveDays++;
+    }
+
+    if(score > bestDayScore){
+      bestDayScore = score;
+      bestDayKey = dayKey;
+    }
+  });
+
+  const avgDay = days.length ? (totalQps / days.length) : 0;
+  const streak = loadStreak()?.current || 0;
+
+  return {
+    totalQps: round1(totalQps),
+    avgDay: round1(avgDay),
+    bestDayKey,
+    bestDayScore: round1(bestDayScore),
+    streak
+  };
+}
+function getDayQuestLog(dayKey){
+  const data = loadAll();
+  const day = data[dayKey];
+
+  if(!day || !Array.isArray(day.quests)) return [];
+
+  return day.quests.slice().sort((a,b)=> Number(b.ts || 0) - Number(a.ts || 0));
+}
+function getDayNotes(dayKey){
+  return getDayQuestLog(dayKey).filter(q => String(q.notes || "").trim());
 }
   /* =========================
     DATA LAYER
@@ -3706,6 +4005,28 @@ homeUserSub: $("homeUserSub"),
 
    actionLockBar: $("actionLockBar"),
 actionLockText: $("actionLockText"),
+
+histTotalQps: $("histTotalQps"),
+histAvgDay: $("histAvgDay"),
+histBestDay: $("histBestDay"),
+histCurrentStreak: $("histCurrentStreak"),
+
+histTrendChart: $("histTrendChart"),
+
+histLearningScore: $("histLearningScore"),
+histLearningMeta: $("histLearningMeta"),
+histWorkScore: $("histWorkScore"),
+histWorkMeta: $("histWorkMeta"),
+histPhysicalScore: $("histPhysicalScore"),
+histPhysicalMeta: $("histPhysicalMeta"),
+histConnectionScore: $("histConnectionScore"),
+histConnectionMeta: $("histConnectionMeta"),
+
+histSelectedDay: $("histSelectedDay"),
+histSelectedTotal: $("histSelectedTotal"),
+histQuestLog: $("histQuestLog"),
+
+histNotesFeed: $("histNotesFeed"),
   };
 
   /* =========================
@@ -6381,14 +6702,23 @@ function switchPage(pageId){
     questBar.style.display = (pageId === "homeScene") ? "flex" : "none";
   }
 
-  if(pageId === "homeScene"){
-    requestAnimationFrame(() => {
-      renderHomeHud();
-      updateDiceVisibility();
-    });
-  }else{
+ if(pageId === "homeScene"){
+  requestAnimationFrame(() => {
+    renderHomeHud();
     updateDiceVisibility();
+  });
+}else{
+  if(el.diceFab){
+    el.diceFab.style.display = (pageId === "appPage") ? "flex" : "none";
   }
+if(pageId === "appPage"){
+  requestAnimationFrame(updateTopNavActive);
+}
+  if(pageId === "historyPage"){
+  renderHistoryRangeTabs();
+  renderHistoryPageStub();
+}
+}
 }
   /* ===== Random Quest events ===== */
 on(el.diceBtn, "click", ()=>{
@@ -6822,6 +7152,133 @@ window.addEventListener("storage", (e)=>{
     acquireMasterTab();
   }
 });
+
+function renderHistoryPageStub(){
+  const summary = getHistorySummary(historyRange);
+  const days = getHistoryDaysByRange(historyRange);
+
+  if(!historySelectedDay || !days.includes(historySelectedDay)){
+    historySelectedDay = days[days.length - 1] || localDateKey(); // วันล่าสุดในช่วง
+  }
+
+  const selectedLog = getDayQuestLog(historySelectedDay);
+  const selectedNotes = getDayNotes(historySelectedDay);
+  const selectedTotal = calcDayTotal(historySelectedDay);
+
+  // Overview
+  if(el.histTotalQps) el.histTotalQps.textContent = summary.totalQps.toFixed(1);
+  if(el.histAvgDay) el.histAvgDay.textContent = summary.avgDay.toFixed(1);
+  if(el.histBestDay) el.histBestDay.textContent =
+    summary.bestDayScore > 0 ? `${summary.bestDayScore.toFixed(1)} • ${summary.bestDayKey}` : "--";
+  if(el.histCurrentStreak) el.histCurrentStreak.textContent = String(summary.streak);
+
+  // Day detail
+  if(el.histSelectedDay) el.histSelectedDay.textContent = historySelectedDay;
+  if(el.histSelectedTotal) el.histSelectedTotal.textContent = `Total: ${selectedTotal.toFixed(1)}`;
+
+  if(el.histQuestLog){
+    if(!selectedLog.length){
+      el.histQuestLog.innerHTML = `<div class="hint">ยังไม่มีเควสในวันนี้</div>`;
+    }else{
+      el.histQuestLog.innerHTML = selectedLog.map(item => {
+        const name = normQuestName(item.questName) || "(no name)";
+        return `
+          <div class="item">
+            <div class="itemTop">
+              <div class="itemName">${escapeHtml(name)}</div>
+              <div class="itemScore">+${Number(item.questScore || 0).toFixed(1)}</div>
+            </div>
+            <div class="itemMeta">
+              ${escapeHtml(item.category)} • ${Number(item.minutesSpent || 0)} min
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+  }
+
+  // Notes feed (ของวันนั้น)
+  if(el.histNotesFeed){
+    if(!selectedNotes.length){
+      el.histNotesFeed.innerHTML = `<div class="hint">วันนี้ยังไม่มีโน้ต</div>`;
+    }else{
+      el.histNotesFeed.innerHTML = selectedNotes.map(item => {
+        const name = normQuestName(item.questName) || "(no name)";
+        return `
+          <div class="item">
+            <div class="itemTop">
+              <div class="itemName">${escapeHtml(name)}</div>
+              <div class="itemMeta">${historySelectedDay}</div>
+            </div>
+            <div class="itemMeta" style="margin-top:8px;">
+              📝 ${escapeHtml(item.notes)}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+  }
+
+  // Placeholder ไว้ก่อน
+  if(el.histLearningScore) el.histLearningScore.textContent = "--";
+  if(el.histLearningMeta) el.histLearningMeta.textContent = "Coming soon";
+  if(el.histWorkScore) el.histWorkScore.textContent = "--";
+  if(el.histWorkMeta) el.histWorkMeta.textContent = "Coming soon";
+  if(el.histPhysicalScore) el.histPhysicalScore.textContent = "--";
+  if(el.histPhysicalMeta) el.histPhysicalMeta.textContent = "Coming soon";
+  if(el.histConnectionScore) el.histConnectionScore.textContent = "--";
+  if(el.histConnectionMeta) el.histConnectionMeta.textContent = "Coming soon";
+}
+function renderHistoryRangeTabs(){
+  document.querySelectorAll(".rangeTab").forEach(btn=>{
+    btn.classList.toggle("active", btn.dataset.range === historyRange);
+  });
+}
+
+document.querySelectorAll(".rangeTab").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    historyRange = btn.dataset.range || "7d";
+    historySelectedDay = null;
+    renderHistoryRangeTabs();
+    renderHistoryPageStub();
+  });
+});
+function updateTopNavActive(){
+  const scroller = document.getElementById("appPage");
+  if(!scroller) return;
+
+  const timerSec = $("sec-timer");
+  const todaySec = $("sec-today");
+  const reportSec = $("sec-report");
+
+  const navTimerBtn = $("navTimerBtn");
+  const navTodayBtn = $("navTodayBtn");
+  const navReportBtn = $("navReportBtn");
+
+  if(!timerSec || !todaySec || !reportSec) return;
+
+  const scrollTop = scroller.scrollTop;
+
+  const topbar = document.querySelector(".topbar");
+  const topbarH = topbar ? topbar.getBoundingClientRect().height : 0;
+
+  const probe = scrollTop + topbarH + 30;
+
+  let active = "timer";
+
+  if(probe >= reportSec.offsetTop){
+    active = "report";
+  }else if(probe >= todaySec.offsetTop){
+    active = "today";
+  }else{
+    active = "timer";
+  }
+
+  navTimerBtn?.classList.toggle("active", active === "timer");
+  navTodayBtn?.classList.toggle("active", active === "today");
+  navReportBtn?.classList.toggle("active", active === "report");
+}
+on($("appPage"), "scroll", updateTopNavActive, { passive:true });
   /* =========================
     BOOT
   ========================= */
