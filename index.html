@@ -5325,9 +5325,17 @@ function rqStartNow(){
         const ms = computeElapsedMs();
         const targetMs = state.cutMinutes * 60000;
 
-        if(!questFinished && questEndTime && ms >= targetMs){
+       if(!questFinished && questEndTime && ms >= targetMs){
   questFinished = true
-  sendQuestDoneNotification()
+
+  const questSnapshot = activeQuest
+    ? { ...activeQuest }
+    : {
+        category: state.selectedCategory,
+        name: state.questName
+      };
+
+  sendQuestDoneNotification(questSnapshot);
 }
 
         if(ms >= targetMs){
@@ -6585,19 +6593,21 @@ function getQuestCategoryEmoji(cat){
   return map[key] || "✅";
 }
 
-function buildNotificationTitle(){
-  return "SakuraQ";
+function buildNotificationTitle(quest){
+  if(!quest) return "SakuraQ";
+  const emoji = getQuestCategoryEmoji(quest.category);
+  return `${emoji} ${quest.name || "Quest"} • ครบเวลาแล้ว`;
 }
 
-function buildNotificationBody(){
-  if(!activeQuest){
+function buildNotificationBody(quest){
+  if(!quest){
     return "ครบเวลาแล้ว • เปิด SakuraQ เพื่อส่ง Report";
   }
 
-  const emoji = getQuestCategoryEmoji(activeQuest.category);
-  const name = activeQuest.name || "Quest";
+  const emoji = getQuestCategoryEmoji(quest.category);
+  const name = quest.name || "Quest";
 
-  return `${emoji} ${name} • ครบเวลาแล้ว • เปิด SakuraQ เพื่อส่ง Report`;
+  return `${emoji} ${name} • เปิด SakuraQ เพื่อส่ง Report`;
 }
 
 function shouldUseSystemNotification(){
@@ -6607,7 +6617,7 @@ function shouldUseSystemNotification(){
   return true
 }
 
-async function sendQuestDoneNotification(){
+async function sendQuestDoneNotification(questSnapshot){
   if(notified) return;
   if(!shouldUseSystemNotification()) return;
   if(!("serviceWorker" in navigator)) return;
@@ -6615,14 +6625,14 @@ async function sendQuestDoneNotification(){
   try{
     const reg = await navigator.serviceWorker.ready;
 
-    await reg.showNotification(buildNotificationTitle(), {
-      body: buildNotificationBody(),
+    await reg.showNotification(buildNotificationTitle(questSnapshot), {
+      body: buildNotificationBody(questSnapshot),
       icon: "icon-192.png",
       tag: "sakuraq-quest-done",
       renotify: false
     });
 
-playQuestDoneSound();
+    playQuestDoneSound();
     notified = true;
   }catch(err){
     console.error("SW notification send error:", err);
