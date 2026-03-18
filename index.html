@@ -2668,18 +2668,13 @@ linear-gradient(
 }
  
 .hpHeroBadge{
-  background: #00d358;
+  background: #00c251;
   color: #ffffff;
   font-size: 11px;
   font-weight: 800;
   padding: 4px 10px;
   border-radius: 999px;
   white-space: nowrap;
-
-  box-shadow:
-    0 0 0 1px rgba(255,255,255,.55) inset,
-    0 4px 12px rgba(111,207,151,.28),
-    0 0 18px rgba(111,207,151,.18);
 }
  
 .hpHeroBell {
@@ -2708,7 +2703,7 @@ linear-gradient(
   width: 100%;
   border-radius: 20px;
   overflow: hidden;
-  background: linear-gradient(160deg, #e8f8ee 0%, #d3f0e0 50%, #c4ebda 100%);
+  background: linear-gradient(160deg, #f3f8f3 0%, #edf6ef 50%, #e7f3ea 100%);
   margin-bottom: 12px;
   min-height: 160px;
   position: relative;
@@ -2842,9 +2837,11 @@ linear-gradient(
   transition: width .45s cubic-bezier(.4,0,.2,1);
 }
  
-.hpBarGreen  { background: linear-gradient(90deg, #3db86b, #6fcf97); }
-.hpBarYellow { background: linear-gradient(90deg, #f0b432, #f5d06e); }
-.hpBarGray   { background: rgba(0,0,0,.18); }
+.hpBarGreen,
+.hpBarYellow,
+.hpBarGray{
+  background: linear-gradient(90deg, #4ade80, #22c55e);
+}
  
 .hpStatFooter {
   display: flex;
@@ -3081,15 +3078,25 @@ linear-gradient(
 /* ═══════════════════════════════════════════
    OVERLAY (kept from original)
 ═══════════════════════════════════════════ */
+.overlay-card{
+  position: relative;
+  z-index: 1;
+}
 .overlay {
   position: fixed;
   inset: 0;
   display: none;
   align-items: flex-end;
   justify-content: center;
+
+  background: rgba(0,0,0,0.35);   /* << ใส่ตรงนี้ */
+  backdrop-filter: blur(2px);     /* optional */
+
   z-index: 9999;
 }
-.overlay.show { display: flex; }
+.overlay.show{
+  display: flex;
+}
  
 /* ═══════════════════════════════════════════
    MOBILE ADJUSTMENTS
@@ -3138,12 +3145,8 @@ linear-gradient(
 
 .hpRangeTabs .rangeTab.active,
 .historyDayTab.active{
-  background:#12bb45;
+  background:#00bd39;
   color:#ffffff;
-  box-shadow:
-    0 0 0 1px rgba(143,216,167,.28),
-    0 0 12px rgba(143,216,167,.32),
-    0 0 24px rgba(143,216,167,.18);
   transform:translateY(-1px);
 }
 /* ===== DAY TABS — clean pretty version ===== */
@@ -3582,7 +3585,6 @@ linear-gradient(
       <!-- top bar -->
       <div class="hpHeroTopBar">
         <div class="hpHeroLeft">
-          <span class="hpHeroIcon">🏠</span>
           <span class="hpHeroLabel">Total</span>
         </div>
         <div class="hpHeroCenter">
@@ -8163,7 +8165,10 @@ function renderHistoryTrendChart(){
   const padLeft = 16;
 
   const innerW = width - padLeft - padRight;
-  const innerH = height - padTop - padBottom;
+  const graphTopOffset = 18;
+const innerH = height - padTop - padBottom - graphTopOffset;
+
+const chartBottomY = padTop + graphTopOffset + innerH;
 
   const maxScore = Math.max(...points.map(p => p.score), 1);
 
@@ -8171,7 +8176,7 @@ function renderHistoryTrendChart(){
 
   const coords = points.map((p, i) => {
     const x = padLeft + (stepX * i);
-    const y = padTop + innerH - ((p.score / maxScore) * innerH);
+    const y = padTop + graphTopOffset + innerH - ((p.score / maxScore) * innerH);
     return {
       ...p,
       x,
@@ -8181,17 +8186,40 @@ function renderHistoryTrendChart(){
 
   const polyline = coords.map(p => `${p.x},${p.y}`).join(" ");
 
+  
+
   const areaPoints = [
-  `${padLeft},${padTop + innerH}`,
+  `${padLeft},${chartBottomY}`,
   ...coords.map(p => `${p.x},${p.y}`),
-  `${coords[coords.length - 1].x},${padTop + innerH}`
+  `${coords[coords.length - 1].x},${chartBottomY}`
 ].join(" ");
+
+
 
  const pointStep =
   historyRange === "3d" ? 1 :
   historyRange === "7d" ? 1 :
   historyRange === "30d" ? 3 :
   7;
+
+  const verticalGuides = coords.map((p, i) => {
+  const isFirst = i === 0;
+  const isLast = i === coords.length - 1;
+  const shouldShow = isFirst || isLast || (i % pointStep === 0);
+
+  if(!shouldShow) return "";
+
+  return `
+    <line
+      x1="${p.x}"
+      y1="${p.y}"
+      x2="${p.x}"
+      y2="${padTop + graphTopOffset + innerH}"
+      stroke="rgba(34,197,94,.16)"
+      stroke-width="2"
+    ></line>
+  `;
+}).join("");
 
 const pointDots = coords.map((p, i) => {
   const isFirst = i === 0;
@@ -8234,17 +8262,19 @@ const xLabels = coords.map((p, i) => {
   `;
 
   const yBottom = `
-    <text x="${padLeft}" y="${padTop + innerH}" text-anchor="start" font-size="10" fill="#94a3b8">
-      0
-    </text>
-  `;
+  <text x="${padLeft}" y="${chartBottomY}" text-anchor="start" font-size="10" fill="#94a3b8">
+    0
+  </text>
+`;
 
   el.histTrendChart.innerHTML = `
     <svg viewBox="0 0 ${width} ${height}" class="historySvgChart" preserveAspectRatio="none">
-      <line x1="${padLeft}" y1="${padTop + innerH}" x2="${width - padRight}" y2="${padTop + innerH}"
+<line x1="${padLeft}" y1="${chartBottomY}" x2="${width - padRight}" y2="${chartBottomY}"
             stroke="rgba(15,23,42,.10)" stroke-width="1" />
       <line x1="${padLeft}" y1="${padTop}" x2="${padLeft}" y2="${padTop + innerH}"
             stroke="rgba(15,23,42,.06)" stroke-width="1" />
+
+                ${verticalGuides}
 
             <polygon
   points="${areaPoints}"
@@ -8254,7 +8284,7 @@ const xLabels = coords.map((p, i) => {
       <polyline
   fill="none"
   stroke="#22c55e"
-  stroke-width="2.5"
+  stroke-width="5"
         stroke-linecap="round"
         stroke-linejoin="round"
         points="${polyline}"
