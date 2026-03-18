@@ -6518,6 +6518,11 @@ if(!qn){ showNameWarn("Quest Name ว่าง"); return; }
     const baseMinutesUsed = Math.min(minutes, remaining);
 
   const baseScore = baseMinutesUsed * RULES.basePerMinute;
+
+if(minutes < RULES.bonusMinMinutes && el.qualityBonus){
+  el.qualityBonus.value = "0";
+}
+
 const bonus = Number(el.qualityBonus?.value || 0);
 const questScore = baseScore + bonus;
 
@@ -6864,32 +6869,59 @@ function saveReportDraft(){
 
 function loadReportDraft(){
   const raw = localStorage.getItem(REPORT_DRAFT_KEY);
-  if(!raw) return;
+  if(!raw) {
+    const lockedMinutes = Math.max(0, Math.round((state.lastElapsedMs || 0) / 60000));
+
+    if(el.reportMinutes) el.reportMinutes.value = lockedMinutes ? String(lockedMinutes) : "";
+    applyBonusRule(lockedMinutes);
+
+    if(lockedMinutes < RULES.bonusMinMinutes && el.qualityBonus){
+      el.qualityBonus.value = "0";
+    }
+    return;
+  }
 
   try{
     const d = JSON.parse(raw);
 
     const lockedMinutes = Math.max(0, Math.round((state.lastElapsedMs || 0) / 60000));
-if(el.reportMinutes) el.reportMinutes.value = lockedMinutes ? String(lockedMinutes) : "";
-    if(el.qualityBonus) el.qualityBonus.value = d.bonus || "0";
+
+    if(el.reportMinutes) el.reportMinutes.value = lockedMinutes ? String(lockedMinutes) : "";
+
+    // ใส่ notes draft ได้ปกติ
     if(el.notes) el.notes.value = d.notes || "";
 
-    const minutes = Number(d.minutes || 0);
-    if(Number.isFinite(minutes) && minutes > 0){
-      applyBonusRule(minutes);
+    // ใช้เวลาจริงตัดสินโบนัส ไม่ใช้ d.minutes
+    applyBonusRule(lockedMinutes);
 
-      const dateKey = state.startDateKey || localDateKey();
-      const qn = normQuestName(state.questName || el.questName?.value || "");
-      if(qn){
-        updateCapHint(dateKey, qn);
-      }
-
-      if(el.draftHint){
-        el.draftHint.style.display = "block";
+    if(el.qualityBonus){
+      if(lockedMinutes < RULES.bonusMinMinutes){
+        el.qualityBonus.value = "0";
+      }else{
+        el.qualityBonus.value = d.bonus || "0";
       }
     }
 
-  }catch(e){}
+    const dateKey = state.startDateKey || localDateKey();
+    const qn = normQuestName(state.questName || el.questName?.value || "");
+    if(qn){
+      updateCapHint(dateKey, qn);
+    }
+
+    if(el.draftHint){
+      el.draftHint.style.display = "block";
+    }
+
+  }catch(e){
+    const lockedMinutes = Math.max(0, Math.round((state.lastElapsedMs || 0) / 60000));
+
+    if(el.reportMinutes) el.reportMinutes.value = lockedMinutes ? String(lockedMinutes) : "";
+    applyBonusRule(lockedMinutes);
+
+    if(lockedMinutes < RULES.bonusMinMinutes && el.qualityBonus){
+      el.qualityBonus.value = "0";
+    }
+  }
 }
 
 function clearReportDraft(){
@@ -7715,9 +7747,23 @@ window.addEventListener("storage", (e)=>{
    HISTORY
 ========================================= */
 function getHistoryDaysByRange(range){
-  const allDays = listDays().slice().reverse(); // เก่า -> ใหม่
+  const savedDays = listDays().slice().reverse(); // เก่า -> ใหม่
+  const today = localDateKey();
 
-  if(range === "all") return allDays;
+  if(range === "all"){
+    if(!savedDays.length) return [today];
+
+    const firstDay = savedDays[0];
+    const allContinuousDays = [];
+
+    let cursor = firstDay;
+    while(cursor <= today){
+      allContinuousDays.push(cursor);
+      cursor = addDays(cursor, 1);
+    }
+
+    return allContinuousDays;
+  }
 
   const map = {
     "2d": 2,
@@ -7727,7 +7773,6 @@ function getHistoryDaysByRange(range){
   };
 
   const limit = map[range] || 7;
-  const today = localDateKey();
 
   const wanted = [];
   for(let i = limit - 1; i >= 0; i--){
@@ -7741,9 +7786,9 @@ function getHistorySummary(range){
   const data = loadAll();
 
   let totalQps = 0;
-  let totalActiveDays = 0;
   let bestDayKey = "--";
   let bestDayScore = 0;
+  let currentStreak = 0;
 
   days.forEach(dayKey => {
     const day = data[dayKey];
@@ -7751,25 +7796,32 @@ function getHistorySummary(range){
 
     totalQps += score;
 
-    if(score > 0){
-      totalActiveDays++;
-    }
-
     if(score > bestDayScore){
       bestDayScore = score;
       bestDayKey = dayKey;
     }
   });
 
+  for(let i = days.length - 1; i >= 0; i--){
+    const dayKey = days[i];
+    const day = data[dayKey];
+    const score = day ? Number(day.totalQps || 0) : 0;
+
+    if(score > 0){
+      currentStreak++;
+    }else{
+      break;
+    }
+  }
+
   const avgDay = days.length ? (totalQps / days.length) : 0;
-  const streak = loadStreak()?.current || 0;
 
   return {
     totalQps: round1(totalQps),
     avgDay: round1(avgDay),
     bestDayKey,
     bestDayScore: round1(bestDayScore),
-    streak
+    streak: currentStreak
   };
 }
 
