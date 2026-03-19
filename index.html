@@ -639,7 +639,28 @@ button:disabled{
         border: 1px solid rgba(251,113,133,.34);
         box-shadow:none;
       }
+      
       button:disabled{ opacity:.45; cursor:not-allowed; }
+
+     #startBtn,
+#submitReportBtn,
+#exportBtn{
+  box-shadow: 2px 5px 0 #15803d !important;
+}
+
+  #startBtn:active:not(:disabled),
+#submitReportBtn:active:not(:disabled),
+#exportBtn:active:not(:disabled){
+  transform: translate(2px,3px);
+  box-shadow: 1px 2px 0 #15803d !important;
+}
+#startBtn{
+  background: linear-gradient(
+    to bottom,
+    #50f066,
+    #2dd457
+  );
+}
 
       .btns{
         display:grid;
@@ -3218,6 +3239,56 @@ linear-gradient(
   color:#888;
 }
 
+.dataPanel{
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(15,23,42,.22);
+  backdrop-filter: blur(6px);
+  z-index: 10070;
+}
+
+.dataPanel.show{
+  display: flex;
+}
+
+.dataPanelCard{
+  width: min(420px, 100%);
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid rgba(15,23,42,.08);
+  box-shadow: 0 20px 50px rgba(15,23,42,.18);
+  padding: 16px;
+}
+
+.dataPanelTitle{
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.dataPanelSub{
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.dataPanelActions{
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.dataPanelWarn{
+  margin-top: 10px;
+  font-size: 11px;
+  color: #64748b;
+}
+
+
+
 </style>
 </head>
 <body>
@@ -3501,16 +3572,6 @@ linear-gradient(
             <div class="bar"><div id="progressFill"></div></div>
 
             <div class="divider"></div>
-
-            <div class="row two">
-              <div>
-                <button id="exportBtn" class="secondary" type="button" style="width:100%;padding:10px 12px;font-size:13px;">Export</button>
-              </div>
-              <div>
-                <button id="importBtn" class="secondary" type="button" style="width:100%;padding:10px 12px;font-size:13px;">Import</button>
-                <input id="importFile" type="file" accept="application/json" style="display:none;">
-              </div>
-            </div>
 
             <div class="list" id="todayList"></div>
           </div>
@@ -3874,26 +3935,48 @@ linear-gradient(
     </div>
   </div>
 
-  <!-- TOP MENU: อยู่นอก appPage -->
-  <div class="topMenuBackdrop" id="topMenuBackdrop"></div>
+ <!-- TOP MENU: อยู่นอก appPage -->
+<div class="topMenuBackdrop" id="topMenuBackdrop"></div>
 
-  <div class="topMenu" id="topMenu" aria-hidden="true">
-    <button class="topMenuItem" type="button" id="topMenuGateBtn">
-      <span class="topMenuItemLabel">
-        <span class="topMenuItemTitle">Morning Gate</span>
-        <span class="topMenuItemSub">ตั้งค่า / เปิด / ปิด</span>
-      </span>
-      <span class="topMenuItemRight" id="topMenuGateState">OFF</span>
-    </button>
+<div class="topMenu" id="topMenu" aria-hidden="true">
+  <button class="topMenuItem" type="button" id="topMenuGateBtn">
+    <span class="topMenuItemLabel">
+      <span class="topMenuItemTitle">Morning Gate</span>
+      <span class="topMenuItemSub">ตั้งค่า / เปิด / ปิด</span>
+    </span>
+    <span class="topMenuItemRight" id="topMenuGateState">OFF</span>
+  </button>
 
-    <button class="topMenuItem" type="button" id="topMenuGuideBtn">
-      <span class="topMenuItemLabel">
-        <span class="topMenuItemTitle">Guide</span>
-        <span class="topMenuItemSub">วิธีใช้งานแอป</span>
-      </span>
-    </button>
+  <button class="topMenuItem" type="button" id="topMenuGuideBtn">
+    <span class="topMenuItemLabel">
+      <span class="topMenuItemTitle">Guide</span>
+      <span class="topMenuItemSub">วิธีใช้งานแอป</span>
+    </span>
+  </button>
+
+  <button class="topMenuItem" type="button" id="topMenuDataBtn">
+    <span class="topMenuItemLabel">
+      <span class="topMenuItemTitle">Data Management</span>
+      <span class="topMenuItemSub">Backup / Restore ข้อมูล</span>
+    </span>
+    <span class="topMenuItemRight">›</span>
+  </button>
+</div>
+
+<div id="dataPanel" class="dataPanel" aria-hidden="true">
+  <div class="dataPanelCard">
+    <div class="dataPanelTitle">Data Management</div>
+    <div class="dataPanelSub">Backup / Restore ข้อมูลของคุณ</div>
+
+    <div class="dataPanelActions">
+      <button id="exportBtn" class="primary" type="button">Export Data</button>
+      <button id="importBtn" class="secondary" type="button">Import Data</button>
+      <input id="importFile" type="file" accept="application/json" hidden>
+    </div>
+
+    <div class="dataPanelWarn">Import อาจ merge หรือ replace ข้อมูลเดิม</div>
   </div>
-
+</div>
   <!-- Quest Category Bar -->
   <div class="questBar" id="questBar">
     <button class="questTab active" type="button" data-category="Learning">Learn</button>
@@ -3935,6 +4018,7 @@ linear-gradient(
       </div>
     </div>
   </div>
+
 
 </body>
 
@@ -4473,6 +4557,7 @@ homeUserSub: $("homeUserSub"),
     exportBtn: $("exportBtn"),
     importBtn: $("importBtn"),
     importFile: $("importFile"),
+    topMenuDataBtn: $("topMenuDataBtn"),
 
     overlay: $("overlay"),
     closeOverlayBtn: $("closeOverlayBtn"),
@@ -6748,94 +6833,145 @@ const questScore = baseScore + bonus;
       </div>
     `;
   }
+/* =========================
+  EXPORT / IMPORT
+========================= */
 
-  /* =========================
-    EXPORT/IMPORT
-  ========================= */
-  function downloadJson(filename, obj){
-    const blob = new Blob([JSON.stringify(obj, null, 2)], { type:"application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+function buildExportPayload(){
+  return {
+    version: KEY_DATA,
+    exportedAt: new Date().toISOString(),
+    data: loadAll()
+  };
+}
+
+function downloadJsonFile(filename, payload){
+  const blob = new Blob(
+    [JSON.stringify(payload, null, 2)],
+    { type: "application/json" }
+  );
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+
+  a.href = url;
+  a.download = filename;
+
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+
+  URL.revokeObjectURL(url);
+}
+
+function validateImportedData(raw){
+  if(!raw || typeof raw !== "object") return false;
+
+  for(const dayKey of Object.keys(raw)){
+    const day = raw[dayKey];
+
+    if(!day || typeof day !== "object") return false;
+    if(!Array.isArray(day.quests)) return false;
+    if(typeof day.totalQps !== "number") return false;
   }
-  function isValidDataShape(all){
-    if(!all || typeof all !== "object") return false;
-    for(const dayKey of Object.keys(all)){
-      const day = all[dayKey];
-      if(!day || typeof day !== "object") return false;
-      if(!Array.isArray(day.quests)) return false;
-      if(typeof day.totalQps !== "number") return false;
-    }
-    return true;
+
+  return true;
+}
+
+function exportData(){
+  const payload = buildExportPayload();
+  downloadJsonFile(`qpsData_v4_${localDateKey()}.json`, payload);
+  showTimerWarn("Exported ✅ (ไฟล์อยู่ Downloads)");
+}
+
+function applyImportedData(imported, mode = "merge"){
+  const raw = imported?.data ?? imported;
+
+  if(!validateImportedData(raw)){
+    alert("ไฟล์ไม่ถูกต้อง: โครงสร้างไม่ตรง qpsData_v4");
+    return false;
   }
-  function exportData(){
-    const payload = {
-      version: KEY_DATA,
-      exportedAt: new Date().toISOString(),
-      data: loadAll()
-    };
-    downloadJson(`qpsData_v4_${localDateKey()}.json`, payload);
-    showTimerWarn("Exported ✅ (ไฟล์อยู่ Downloads)");
+
+  pushUndoSnapshot();
+
+  if(mode === "replace"){
+    saveAll(raw);
+  }else{
+    const current = loadAll();
+
+    for(const dayKey of Object.keys(raw)){
+      const incomingDay = raw[dayKey];
+      const targetDay = ensureDay(current, dayKey);
+
+      targetDay.quests = targetDay.quests.concat(incomingDay.quests || []);
+      recalcDayTotal(targetDay);
+    }
+
+    saveAll(current);
   }
-  function importDataObject(imported, mode="merge"){
-    const raw = imported?.data ?? imported;
-    if(!isValidDataShape(raw)){
-      alert("ไฟล์ไม่ถูกต้อง: โครงสร้างไม่ตรง qpsData_v4");
-      return;
-    }
 
-    pushUndoSnapshot();
+  clearReportDraft();
+  updateStreakAfterChange();
+  selectedDay = localDateKey();
 
-    if(mode === "replace"){
-      saveAll(raw);
-    }else{
-      const cur = loadAll();
-      for(const dayKey of Object.keys(raw)){
-        const incomingDay = raw[dayKey];
-        const target = ensureDay(cur, dayKey);
-        target.quests = target.quests.concat(incomingDay.quests || []);
-        recalcDayTotal(target);
-      }
-      saveAll(cur);
-    }
-clearReportDraft();
-    updateStreakAfterChange();
-    selectedDay = localDateKey();
-    updateUI();
-
-    if(el.overlay?.classList.contains("show")){
-      renderHistoryDays();
-      renderDayView(selectedDay);
-    }
-
-    if(hasQuestAfterTodayTrigger()){
-
-    gate.unlocked = true;
-saveGate(); // ถ้ามี
-      gate.passed = true;
-      gate.locked = false;
-      gate.unlocked = true;
-      saveGate();
-    }
-
-    showTimerWarn(`Imported ✅ (${mode.toUpperCase()})`);
+  if(hasQuestAfterTodayTrigger()){
+    gate.passed = true;
+    gate.locked = false;
+    saveGate();
   }
-  async function importFromFile(file){
-    const text = await file.text();
-    let obj;
-    try { obj = JSON.parse(text); }
-    catch { alert("ไฟล์ JSON อ่านไม่ได้"); return; }
 
-    const choice = prompt("Import mode: พิมพ์ merge หรือ replace", "merge");
-    const mode = (choice || "merge").toLowerCase() === "replace" ? "replace" : "merge";
-    if(!confirm(`ยืนยัน Import แบบ ${mode.toUpperCase()} ?`)) return;
+  updateUI();
 
-    importDataObject(obj, mode);
+  if(el.overlay?.classList.contains("show")){
+    renderHistoryDays();
+    renderDayView(selectedDay);
   }
+
+  showTimerWarn(`Imported ✅ (${mode.toUpperCase()})`);
+  return true;
+}
+
+async function importFromFile(file){
+  const text = await file.text();
+
+  let payload;
+  try{
+    payload = JSON.parse(text);
+  }catch{
+    alert("ไฟล์ JSON อ่านไม่ได้");
+    return;
+  }
+
+  const choice = prompt("Import mode: พิมพ์ merge หรือ replace", "merge");
+  const mode = (choice || "merge").toLowerCase() === "replace" ? "replace" : "merge";
+
+  if(!confirm(`ยืนยัน Import แบบ ${mode.toUpperCase()} ?`)) return;
+
+  applyImportedData(payload, mode);
+}
+
+on(el.topMenuDataBtn, "click", ()=>{
+  openDataPanel();
+});
+
+function openDataPanel(){
+  const panel = $("dataPanel");
+  if(!panel) return;
+
+  closeTopMenu();
+  panel.classList.add("show");
+  panel.setAttribute("aria-hidden", "false");
+}
+
+function closeDataPanel(){
+  const panel = $("dataPanel");
+  if(!panel) return;
+  panel.classList.remove("show");
+  panel.setAttribute("aria-hidden", "true");
+}
+on($("dataPanel"), "click", (e)=>{
+  if(e.target === $("dataPanel")) closeDataPanel();
+});
 
   /* =========================
     TOOLTIP
