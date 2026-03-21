@@ -13,6 +13,9 @@
         --card:#ffffff;
         --ink:#0f172a;
         --muted:#64748b;
+        
+        --warmInk:#e35d3f;
+--warmSoft:#f08a6a;
 
         --accent:#22c55e;
         --accent2:#60a5fa;
@@ -1954,26 +1957,28 @@ background-size: 200% 100%;
   display:flex;
   align-items:stretch;
   justify-content:center;
-  padding:0;
+  padding:12px;
 }
+
 .roomCard{
   width:100%;
   max-width:100%;
-  min-height:100dvh;
+  min-height:calc(100dvh - 24px);
   background:rgba(255,255,255,.72);
-  border:0;
-  border-radius:0;
+  border:1px solid rgba(15,23,42,.06);
+  border-radius:28px;
   padding:0;
   position:relative;
   overflow:hidden;
+  box-shadow:0 16px 36px rgba(15,23,42,.08);
 }
 
 .roomScene{
   position:relative;
   width:100%;
-  min-height:100dvh;
+  min-height:calc(100dvh - 24px);
   overflow:hidden;
-  border-radius:0;
+  border-radius:28px;
   isolation:isolate;
 }
 
@@ -2185,10 +2190,10 @@ linear-gradient(
   right:18px;
   width:clamp(140px, 38%, 180px);
   padding:12px;
-  border-radius:18px;
+  border-radius:24px;
   background:rgba(255,255,255,.78);
-  border:1px solid rgba(15,23,42,.08);
-  box-shadow:0 12px 28px rgba(15,23,42,.08);
+  border:1px solid rgba(15,23,42,.06);
+  box-shadow:0 16px 32px rgba(15,23,42,.08);
   backdrop-filter:blur(10px);
   -webkit-backdrop-filter:blur(10px);
   z-index:20;
@@ -2314,27 +2319,28 @@ linear-gradient(
   align-items:center;
   gap:8px;
 
-  padding:10px 14px;
-  border-radius:18px;
+  padding:11px 15px;
+  border-radius:999px;
 
-  background:rgba(255,255,255,.82);
-  border:1px solid rgba(15,23,42,.08);
-  box-shadow:0 12px 28px rgba(15,23,42,.08);
+  background:rgba(255,255,255,.88);
+  border:1px solid rgba(15,23,42,.06);
+  box-shadow:0 10px 24px rgba(15,23,42,.06);
 
   backdrop-filter:blur(10px);
   -webkit-backdrop-filter:blur(10px);
 }
 
-.homeStreakValue{
-  font-size:18px;
+.homeStreakValue,
+.streakNum{
+  color:#e4350d;
   font-weight:900;
-  color:var(--ink);
-  line-height:1;
 }
 
 .homeStreakBadge .sqFire{
   flex:0 0 auto;
 }
+
+
 
 @media (max-width:480px){
   .homeStreakBadge{
@@ -3665,6 +3671,9 @@ linear-gradient(
   box-shadow: none !important;
   padding: 0 !important;
   min-width: auto !important;
+}
+.homeStreakBadge{
+  border-radius:999px !important;
 }
 </style>
 </head>
