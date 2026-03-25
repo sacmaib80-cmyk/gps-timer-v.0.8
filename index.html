@@ -5074,8 +5074,8 @@ function hasQuestAfterTodayTrigger(){
   const triggerTs = getTodayTriggerTimestamp();
   if(!triggerTs) return false;
 
-  const data = loadAll();
-  const today = data[localDateKey()];
+  const all = loadAll();
+  const today = all.days?.[localDateKey()];
   if(!today || !Array.isArray(today.quests)) return false;
 
   return today.quests.some(q => Number(q.ts || 0) >= triggerTs);
@@ -5085,43 +5085,220 @@ function hasQuestAfterTodayTrigger(){
   /* =========================
     DATA LAYER
   ========================= */
-  function loadAll(){
+  function createEmptyAppData(){
+  return {
+    state: {},
+    gateCfg: {},
+    profile: {},
+    streak: {},
+    days: {},
+    updatedAt: 0
+  };
+}
+
+function normalizeAppData(raw){
+  if(!raw || typeof raw !== "object" || Array.isArray(raw)){
+    return createEmptyAppData();
+  }
+
+  return {
+    state: raw.state && typeof raw.state === "object" && !Array.isArray(raw.state) ? raw.state : {},
+    gateCfg: raw.gateCfg && typeof raw.gateCfg === "object" && !Array.isArray(raw.gateCfg) ? raw.gateCfg : {},
+    profile: raw.profile && typeof raw.profile === "object" && !Array.isArray(raw.profile) ? raw.profile : {},
+    streak: raw.streak && typeof raw.streak === "object" && !Array.isArray(raw.streak) ? raw.streak : {},
+    days: raw.days && typeof raw.days === "object" && !Array.isArray(raw.days) ? raw.days : {},
+    updatedAt: Number.isFinite(raw.updatedAt) ? raw.updatedAt : 0
+  };
+}
+
+function createDefaultGateCfg(){
+  return {
+    enabled: false,
+    triggerHHMM: null,
+    lockedUntil: 0,
+    effectiveFrom: null
+  };
+}
+
+function normalizeGateCfg(raw){
+  const cfg = createDefaultGateCfg();
+
+  if(!raw || typeof raw !== "object" || Array.isArray(raw)){
+    return cfg;
+  }
+
+  cfg.enabled = !!raw.enabled;
+  cfg.triggerHHMM = /^\d{2}:\d{2}$/.test(raw.triggerHHMM || "") ? raw.triggerHHMM : null;
+  cfg.lockedUntil = Number.isFinite(Number(raw.lockedUntil)) ? Number(raw.lockedUntil) : 0;
+  cfg.effectiveFrom = raw.effectiveFrom || null;
+
+  if(cfg.triggerHHMM && !parseHHMM(cfg.triggerHHMM)){
+    cfg.triggerHHMM = null;
+  }
+
+  return cfg;
+}
+
+function createDefaultProfile(){
+  return {
+    name: "MaAMha"
+  };
+}
+
+function normalizeProfile(raw){
+  const base = createDefaultProfile();
+
+  if(!raw || typeof raw !== "object" || Array.isArray(raw)){
+    return base;
+  }
+
+  return {
+    name: typeof raw.name === "string" && raw.name.trim()
+      ? raw.name.trim()
+      : base.name
+  };
+}
+
+function createDefaultStreak(){
+  return {
+    current: 0,
+    best: 0,
+    lastDone: null
+  };
+}
+
+function normalizeStreak(raw){
+  const base = createDefaultStreak();
+
+  if(!raw || typeof raw !== "object" || Array.isArray(raw)){
+    return base;
+  }
+
+  const current = Number(raw.current);
+  const best = Number(raw.best);
+  const lastDone = raw.lastDone;
+
+  return {
+    current: Number.isFinite(current) && current >= 0 ? Math.floor(current) : 0,
+    best: Number.isFinite(best) && best >= 0 ? Math.floor(best) : 0,
+    lastDone: typeof lastDone === "string" && lastDone.trim() ? lastDone : null
+  };
+}
+
+function createDefaultDay(){
+  return {
+    totalQps: 0,
+    quests: []
+  };
+}
+
+function normalizeQuest(raw){
+  if(!raw || typeof raw !== "object" || Array.isArray(raw)){
+    return null;
+  }
+
+  return {
+    ts: Number.isFinite(Number(raw.ts)) ? Number(raw.ts) : Date.now(),
+    questName: typeof raw.questName === "string" ? raw.questName : "",
+    category: typeof raw.category === "string" ? raw.category : "Learning",
+    minutesSpent: Number.isFinite(Number(raw.minutesSpent)) ? Number(raw.minutesSpent) : 0,
+    questScore: Number.isFinite(Number(raw.questScore)) ? Number(raw.questScore) : 0,
+    notes: typeof raw.notes === "string" ? raw.notes : "",
+    qualityBonus: Number.isFinite(Number(raw.qualityBonus)) ? Number(raw.qualityBonus) : 0
+  };
+}
+
+// =========================
+// DATA ACCESS LAYER (ตัวกลาง)
+// =========================
+
+function getAllData(){
+  return loadAll();
+}
+
+function getDay(dayKey){
+  const all = getAllData();
+  return all.days?.[dayKey];
+}
+
+function getAllDays(){
+  const all = getAllData();
+  return all.days || {};
+}
+
+function loadAll(){
   try{
-    return JSON.parse(localStorage.getItem(makeScopedKey(KEY_DATA))) || {};
-  }catch{
-    return {};
+    const rawText = localStorage.getItem(makeScopedKey(KEY_DATA));
+    if(!rawText) return createEmptyAppData();
+
+    const raw = JSON.parse(rawText);
+    return normalizeAppData(raw);
+  }catch(err){
+    console.error("loadAll failed:", err);
+    return createEmptyAppData();
   }
 }
 
 let cloudSaveTimer = null;
 
 function saveAll(data){
-  localStorage.setItem(makeScopedKey(KEY_DATA), JSON.stringify(data));
+  const safeData = normalizeAppData(data);
+  safeData.updatedAt = Date.now();
 
-  // debounce 2 วิ
+  localStorage.setItem(
+    makeScopedKey(KEY_DATA),
+    JSON.stringify(safeData)
+  );
+
   if(cloudSaveTimer) clearTimeout(cloudSaveTimer);
 
+  const snapshot = JSON.parse(JSON.stringify(safeData));
+
   cloudSaveTimer = setTimeout(async () => {
-  await cloudSaveAll();
-}, 2000);
+    try{
+      await cloudSaveAll(snapshot);
+    }catch(err){
+      console.error("cloudSaveAll failed:", err);
+    }
+  }, 2000);
 }
-  function ensureDay(data, dateKey){
-    if(!data[dateKey]) data[dateKey] = { totalQps: 0, quests: [] };
-    if(!Array.isArray(data[dateKey].quests)) data[dateKey].quests = [];
-    if(typeof data[dateKey].totalQps !== "number") data[dateKey].totalQps = 0;
-    return data[dateKey];
+
+function ensureDay(days, dateKey){
+  if(!days || typeof days !== "object" || Array.isArray(days)){
+    throw new Error("ensureDay: days must be an object");
   }
+
+  if(typeof dateKey !== "string" || !dateKey.trim()){
+    throw new Error("ensureDay: invalid dateKey");
+  }
+
+  if(!days[dateKey] || typeof days[dateKey] !== "object" || Array.isArray(days[dateKey])){
+    days[dateKey] = createDefaultDay();
+  }
+
+  if(!Number.isFinite(Number(days[dateKey].totalQps))){
+    days[dateKey].totalQps = 0;
+  }else{
+    days[dateKey].totalQps = Number(days[dateKey].totalQps);
+  }
+
+  if(!Array.isArray(days[dateKey].quests)){
+    days[dateKey].quests = [];
+  }
+
+  return days[dateKey];
+}
   function recalcDayTotal(dayObj){
     const total = (dayObj.quests||[]).reduce((s,q)=> s + (Number(q.questScore)||0), 0);
     dayObj.totalQps = round1(total);
   }
   function listDays(){
-    const data = loadAll();
-    return Object.keys(data).sort().reverse();
-  }
+  const all = loadAll();
+  return Object.keys(all.days || {}).sort().reverse();
+}
   function calcDayTotal(dateKey){
-    const data = loadAll();
-    const day = data[dateKey];
+    const all = loadAll();
+const day = all.days?.[dateKey];
     if(!day) return 0;
     return round1(typeof day.totalQps === "number"
       ? day.totalQps
@@ -5129,8 +5306,8 @@ function saveAll(data){
     );
   }
   function calcQuestBaseMinutesUsed(dateKey, questName){
-    const data = loadAll();
-    const day = data[dateKey];
+    const all = loadAll();
+const day = all.days?.[dateKey];
     if(!day || !Array.isArray(day.quests)) return 0;
     const qn = normQuestName(questName).toLowerCase();
     return day.quests
@@ -5138,35 +5315,65 @@ function saveAll(data){
       .reduce((s,x) => s + (Number(x.baseMinutesUsed)||0), 0);
   }
   function isQuestNameDuplicateToday(dateKey, questName){
-    const data = loadAll();
-    const day = data[dateKey];
+    const all = loadAll();
+const day = all.days?.[dateKey];
     if(!day || !Array.isArray(day.quests)) return false;
     const qn = normQuestName(questName).toLowerCase();
     return day.quests.some(x => normQuestName(x.questName).toLowerCase() === qn);
   }
   function isDayDone(dateKey){
-    const data = loadAll();
-    const day = data[dateKey];
+    const all = loadAll();
+const day = all.days?.[dateKey];
     return !!(day && Array.isArray(day.quests) && day.quests.length > 0);
   }
  
- function loadProfile(){
+function loadProfile(){
+  let loaded = null;
+
+  // 1) primary source = KEY_DATA
   try{
-    return JSON.parse(localStorage.getItem(makeScopedKey(KEY_PROFILE))) || { name: "MaAMha" };
-  }catch{
-    return { name: "MaAMha" };
+    const all = loadAll();
+    if(all.profile && typeof all.profile === "object" && !Array.isArray(all.profile)){
+      loaded = all.profile;
+    }
+  }catch(err){
+    console.error("loadProfile KEY_DATA failed:", err);
   }
+
+  // 2) fallback legacy = KEY_PROFILE
+  if(!loaded){
+    try{
+      const raw = localStorage.getItem(makeScopedKey(KEY_PROFILE));
+      if(raw){
+        const parsed = JSON.parse(raw);
+        if(parsed && typeof parsed === "object" && !Array.isArray(parsed)){
+          loaded = parsed;
+        }
+      }
+    }catch(err){
+      console.error("loadProfile legacy failed:", err);
+    }
+  }
+
+  return normalizeProfile(loaded);
 }
 
 function saveProfile(profile){
-  localStorage.setItem(makeScopedKey(KEY_PROFILE), JSON.stringify(profile));
+  const safeProfile = normalizeProfile(profile);
+
+  const all = loadAll();
+  all.profile = JSON.parse(JSON.stringify(safeProfile));
+  saveAll(all);
+
+  // optional: เก็บ legacy key ชั่วคราวช่วง migration
+  localStorage.setItem(makeScopedKey(KEY_PROFILE), JSON.stringify(safeProfile));
 }
 
 function calcLifetimeQps(){
-  const data = loadAll();
+  const all = loadAll();
   let total = 0;
 
-  Object.values(data).forEach(day=>{
+  Object.values(all.days || {}).forEach(day=>{
     if(typeof day?.totalQps === "number"){
       total += day.totalQps;
     }else if(Array.isArray(day?.quests)){
@@ -5185,38 +5392,60 @@ function calcLevelFromLifetimeQps(totalQps){
     STREAK
   ========================= */
   function loadStreak(){
-  const raw = localStorage.getItem(makeScopedKey(KEY_STREAK));
+  let loaded = null;
+
+  // 1) primary source = KEY_DATA
   try{
-    return raw ? JSON.parse(raw) : { current:0, best:0, lastDone:null };
-  }catch{
-    return { current:0, best:0, lastDone:null };
+    const all = loadAll();
+    if(all.streak && typeof all.streak === "object" && !Array.isArray(all.streak)){
+      loaded = all.streak;
+    }
+  }catch(err){
+    console.error("loadStreak KEY_DATA failed:", err);
   }
+
+  // 2) fallback legacy = KEY_STREAK
+  if(!loaded){
+    try{
+      const raw = localStorage.getItem(makeScopedKey(KEY_STREAK));
+      if(raw){
+        const parsed = JSON.parse(raw);
+        if(parsed && typeof parsed === "object" && !Array.isArray(parsed)){
+          loaded = parsed;
+        }
+      }
+    }catch(err){
+      console.error("loadStreak legacy failed:", err);
+    }
+  }
+
+  return normalizeStreak(loaded);
 }
 
 function saveStreak(s){
-  localStorage.setItem(makeScopedKey(KEY_STREAK), JSON.stringify(s));
-}
-  function computeStreakFromLogs(){
-    const today = localDateKey();
-    if(!isDayDone(today)) return { current:0 };
+  const safeStreak = normalizeStreak(s);
 
-    let current = 0;
-    let cursor = today;
-    while(isDayDone(cursor)){
-      current++;
-      cursor = addDays(cursor, -1);
-    }
-    return { current };
-  }
+  const all = loadAll();
+  all.streak = JSON.parse(JSON.stringify(safeStreak));
+  saveAll(all);
+
+  // optional: เก็บ legacy key ชั่วคราวช่วง migration
+  localStorage.setItem(makeScopedKey(KEY_STREAK), JSON.stringify(safeStreak));
+}
+
   function updateStreakAfterChange(){
-    const s = loadStreak();
-    const computed = computeStreakFromLogs();
-    s.current = computed.current;
-    if(s.current > (s.best || 0)) s.best = s.current;
-    s.lastDone = isDayDone(localDateKey()) ? localDateKey() : s.lastDone;
-    saveStreak(s);
-    renderStreak();
-  }
+  const s = loadStreak();
+  const computed = computeStreakFromLogs();
+
+  s.current = computed.current;
+  if(s.current > (s.best || 0)) s.best = s.current;
+  s.lastDone = isDayDone(localDateKey()) ? localDateKey() : s.lastDone;
+
+  saveStreak(s);
+  renderStreak();
+  renderHomeHud();
+  renderHistoryPageStub();
+}
 function renderStreak(){
   const s = loadStreak();
 
@@ -5233,6 +5462,41 @@ function renderStreak(){
     homeStreakValue.textContent = s.current;
   }
 }
+function computeStreakFromLogs(){
+  const all = loadAll();
+  const days = all.days || {};
+
+  const keys = Object.keys(days).sort(); // เก่า -> ใหม่
+  let current = 0;
+  let best = 0;
+  let run = 0;
+
+  for(const dayKey of keys){
+    const day = days[dayKey];
+    const done = !!(day && Array.isArray(day.quests) && day.quests.length > 0);
+
+    if(done){
+      run += 1;
+      if(run > best) best = run;
+    }else{
+      run = 0;
+    }
+  }
+
+  // current streak = นับย้อนหลังจากวันนี้
+  current = 0;
+  let cursor = localDateKey();
+
+  while(true){
+    const day = days[cursor];
+    const done = !!(day && Array.isArray(day.quests) && day.quests.length > 0);
+    if(!done) break;
+    current += 1;
+    cursor = addDays(cursor, -1);
+  }
+
+  return { current, best };
+}
   /* =========================
     UNDO/REDO
   ========================= */
@@ -5247,17 +5511,20 @@ function renderStreak(){
 function saveUndo(u){
   localStorage.setItem(makeScopedKey(KEY_UNDO), JSON.stringify(u));
 }
-  function snapshotData(){ return loadAll(); }
+  function snapshotData(){
+  return JSON.parse(JSON.stringify(loadAll()));
+}
   function applySnapshot(snap){
-    if(!snap || typeof snap !== "object") return;
-    saveAll(snap);
-    updateStreakAfterChange();
-    updateUI();
-    if(el.overlay?.classList.contains("show")){
-      renderHistoryDays();
-      renderDayView(selectedDay || localDateKey());
-    }
+  if(!snap || typeof snap !== "object") return;
+
+  saveAll(snap);
+  updateStreakAfterChange();
+  updateUI();
+
+  if(el.overlay?.classList.contains("show")){
+    renderHistoryPageStub();
   }
+}
   function pushUndoSnapshot(){
     const u = loadUndo();
     u.undo = snapshotData();
@@ -5498,18 +5765,18 @@ function makeScopedDayKey(prefix, dayKey){
 }
 
 function saveState(){
-  localStorage.setItem(makeScopedKey(KEY_STATE), JSON.stringify(state));
+  const all = loadAll();
+  all.state = structuredClone(state);
+  saveAll(all);
 }
 
-function loadState(){
-  const raw = localStorage.getItem(makeScopedKey(KEY_STATE));
-  if(!raw) return;
 
-  try{
-    const parsed = JSON.parse(raw);
-    Object.assign(state, parsed);
-  }catch(err){
-    console.error("loadState failed:", err);
+function loadState(){
+  const all = loadAll();
+  const saved = all.state;
+
+  if(saved && typeof saved === "object" && !Array.isArray(saved)){
+    Object.assign(state, saved);
   }
 }
 function resetRuntimeForAccountSwitch(){
@@ -5614,70 +5881,44 @@ const KEY_DICE_POS = "qps_dice_pos_v1";
   };
 
   function loadGateCfg(){
-  gateCfg = { enabled:false, triggerHHMM:null, lockedUntil:0, effectiveFrom:null };
+  let loaded = null;
 
-  const scopedKey = makeScopedKey(KEY_GATE_CFG);
-
-  // 1) โหลดจาก KEY_DATA (ตัวหลัก)
+  // 1) primary source = KEY_DATA
   try{
     const all = loadAll();
-    const c = all?.gateCfg;
-
-    if(c && typeof c === "object"){
-      gateCfg.enabled = !!c.enabled;
-      gateCfg.triggerHHMM = /^\d{2}:\d{2}$/.test(c.triggerHHMM||"") ? c.triggerHHMM : null;
-      gateCfg.lockedUntil = Number(c.lockedUntil || 0);
-      gateCfg.effectiveFrom = c.effectiveFrom || null;
+    if(all.gateCfg && typeof all.gateCfg === "object" && !Array.isArray(all.gateCfg)){
+      loaded = all.gateCfg;
     }
-  }catch{}
+  }catch(err){
+    console.error("loadGateCfg KEY_DATA failed:", err);
+  }
 
-  // 2) fallback → KEY_GATE_CFG (สำหรับ backward compatibility)
-  try{
-    const raw = localStorage.getItem(scopedKey);
-    if(raw){
-      const c = JSON.parse(raw);
-      if(c && typeof c==="object"){
-        if(!gateCfg.triggerHHMM){
-          gateCfg.triggerHHMM = /^\d{2}:\d{2}$/.test(c.triggerHHMM||"") ? c.triggerHHMM : null;
-        }
-        if(!gateCfg.effectiveFrom){
-          gateCfg.effectiveFrom = c.effectiveFrom || null;
-        }
-        if(!gateCfg.lockedUntil){
-          gateCfg.lockedUntil = Number(c.lockedUntil || 0);
-        }
-        if(typeof gateCfg.enabled !== "boolean"){
-          gateCfg.enabled = !!c.enabled;
+  // 2) fallback legacy
+  if(!loaded){
+    try{
+      const raw = localStorage.getItem(makeScopedKey(KEY_GATE_CFG));
+      if(raw){
+        const parsed = JSON.parse(raw);
+        if(parsed && typeof parsed === "object" && !Array.isArray(parsed)){
+          loaded = parsed;
         }
       }
+    }catch(err){
+      console.error("loadGateCfg legacy failed:", err);
     }
-  }catch{}
+  }
 
-  // 3) sanitize
-  if(gateCfg.triggerHHMM && !parseHHMM(gateCfg.triggerHHMM)) gateCfg.triggerHHMM = null;
-  if(!Number.isFinite(gateCfg.lockedUntil)) gateCfg.lockedUntil = 0;
-
-  // 4) sync กลับให้ KEY_DATA เสมอ
-  saveGateCfg();
+  gateCfg = normalizeGateCfg(loaded);
 }
-  function saveGateCfg(){
-  // 1) save local cache (optional)
-  localStorage.setItem(makeScopedKey(KEY_GATE_CFG), JSON.stringify(gateCfg));
+function saveGateCfg(){
+  gateCfg = normalizeGateCfg(gateCfg);
 
-  // 2) merge เข้า KEY_DATA
   const all = loadAll();
-
-  all.gateCfg = {
-    enabled: !!gateCfg.enabled,
-    triggerHHMM: gateCfg.triggerHHMM || null,
-    lockedUntil: Number(gateCfg.lockedUntil || 0),
-    effectiveFrom: gateCfg.effectiveFrom || null
-  };
-
-  all.updatedAt = Date.now();
-
-  // 3) save → จะ trigger cloudSaveAll อัตโนมัติ
+  all.gateCfg = JSON.parse(JSON.stringify(gateCfg));
   saveAll(all);
+
+  // optional legacy cache during migration only
+  localStorage.setItem(makeScopedKey(KEY_GATE_CFG), JSON.stringify(all.gateCfg));
 }
   function canEditTriggerNow(){
     if(!gateCfg.triggerHHMM) return true;
@@ -5919,8 +6160,8 @@ const raw = localStorage.getItem(makeScopedKey(KEY_GATE));
     if(blockedByUnlock) return;
 
     const todayKey = localDateKey();
-    const data = loadAll();
-    const day = ensureDay(data, todayKey);
+    const all = loadAll();
+const day = ensureDay(all.days, todayKey);
 
     const bonusName = "Morning Gate Bonus";
     const exists = day.quests.some(q => normQuestName(q.questName).toLowerCase() === bonusName.toLowerCase());
@@ -5946,8 +6187,8 @@ const raw = localStorage.getItem(makeScopedKey(KEY_GATE));
     };
 
     day.quests.push(entry);
-    recalcDayTotal(day);
-    saveAll(data);
+recalcDayTotal(day);
+saveAll(all);
 
     gate.bonusGranted = true;
     saveGate();
@@ -6463,8 +6704,8 @@ function showActionLockBar(msg){
     if(el.todayTotal) el.todayTotal.textContent = total.toFixed(1);
     if(el.progressFill) el.progressFill.style.width = `${Math.max(0,Math.min(100,total))}%`;
 
-    const data = loadAll();
-    const day = data[todayKey] || { totalQps:0, quests:[] };
+    const all = loadAll();
+const day = all.days?.[todayKey] || { totalQps:0, quests:[] };
     const log = (day.quests||[]).slice().reverse();
 
     if(!el.todayList) return;
@@ -6675,42 +6916,52 @@ function rqEnergyAllowedForCategory(category, energy){
   return true;
 }
 function rqGetDomainsFromHistory(category, lookbackDays = SQ_DICE_RULES.lookbackDays){
-  const data = loadAll();
+  const all = loadAll();
   const today = localDateKey();
   const freq = new Map();
 
   for(let i=0;i<lookbackDays;i++){
     const dk = addDays(today, -i);
-    const day = data[dk];
+    const day = all.days?.[dk];
     if(!day?.quests) continue;
+
     for(const q of day.quests){
       if(q.category !== category) continue;
+
       const dom = rqExtractDomainFromQuestName(q.questName);
       if(!dom) continue;
+
       const key = dom.toLowerCase();
-      freq.set(key, { dom, n: (freq.get(key)?.n || 0) + 1 });
+      freq.set(key, {
+        dom,
+        n: (freq.get(key)?.n || 0) + 1
+      });
     }
   }
+
   const sorted = [...freq.values()].sort((a,b)=> b.n - a.n);
   return sorted.map(x => x.dom);
 }
 
 function rqGetRecentDomains(category, days = 2){
-  const data = loadAll();
+  const all = loadAll();
   const today = localDateKey();
   const arr = [];
 
   for(let i=1;i<=days;i++){
     const dk = addDays(today, -i);
-    const day = data[dk];
+    const day = all.days?.[dk];
     if(!day?.quests) continue;
 
     const quests = [...day.quests].sort((a,b)=> Number(b.ts || 0) - Number(a.ts || 0));
 
     for(const q of quests){
       if(q.category !== category) continue;
+
       const dom = rqExtractDomainFromQuestName(q.questName);
-      if(dom) arr.push(dom.toLowerCase().trim());
+      if(dom){
+        arr.push(dom.toLowerCase().trim());
+      }
     }
   }
 
@@ -6718,13 +6969,13 @@ function rqGetRecentDomains(category, days = 2){
 }
 
 function rqGetLastWorkActionForDomain(domain, lookbackDays = SQ_DICE_RULES.lookbackDays){
-  const data = loadAll();
+  const all = loadAll();
   const today = localDateKey();
   const target = String(domain || "").toLowerCase().trim();
 
   for(let i=0;i<lookbackDays;i++){
     const dk = addDays(today, -i);
-    const day = data[dk];
+    const day = all.days?.[dk];
     if(!day?.quests) continue;
 
     const quests = [...day.quests].sort((a,b)=> Number(b.ts || 0) - Number(a.ts || 0));
@@ -6735,10 +6986,13 @@ function rqGetLastWorkActionForDomain(domain, lookbackDays = SQ_DICE_RULES.lookb
       const dom = rqExtractDomainFromQuestName(q.questName).toLowerCase().trim();
       if(dom !== target) continue;
 
-      const fullName = normQuestName(q.questName);
-      for(const act of SQ_WORK_FLOW){
-        if(fullName.includes(act)) return act;
-      }
+      const name = normQuestName(q.questName);
+
+      if(name.includes("วางแผน Focus")) return "วางแผน Focus";
+      if(name.includes("ลงมือทำ Focus")) return "ลงมือทำ Focus";
+      if(name.includes("แก้/ปรับ Focus")) return "แก้/ปรับ Focus";
+      if(name.includes("Focus 1 อย่าง")) return "Focus 1 อย่าง";
+      if(name.includes("สรุปบทเรียน Focus")) return "สรุปบทเรียน Focus";
     }
   }
 
@@ -6840,8 +7094,8 @@ function rqBuild7dStats(){
   cats.forEach(c=> stat[c] = { minutes:0, count:0 });
 
   for(let i=0;i<7;i++){
-    const dk = addDays(today, -i);
-    const day = data[dk];
+    const all = loadAll();
+    const day = all.days?.[dk];
     if(!day?.quests) continue;
     for(const q of day.quests){
       if(!stat[q.category]) continue;
@@ -6868,8 +7122,8 @@ function rqBuildRecentCategoryStats(days = 2){
   const stat = new Map();
 
   for(let i=1;i<=days;i++){
-    const dk = addDays(today, -i);
-    const day = data[dk];
+    const all = loadAll();
+const day = all.days?.[dk];
     if(!day?.quests) continue;
     for(const q of day.quests){
       const c = q.category;
@@ -6916,8 +7170,8 @@ function rqGetRecentPhysicalParts(days = SQ_DICE_RULES.physicalCooldownDays){
   const used = new Set();
 
   for(let i=1;i<=days;i++){
-    const dk = addDays(today, -i);
-    const day = data[dk];
+    const all = loadAll();
+const day = all.days?.[dk];
     if(!day?.quests) continue;
     for(const q of day.quests){
       if(q.category !== "Physical") continue;
@@ -7766,11 +8020,11 @@ const questScore = baseScore + bonus;
       })()
     };
 
-    const data = loadAll();
-    const day = ensureDay(data, dateKey);
+    const all = loadAll();
+const day = ensureDay(all.days, dateKey);
     day.quests.push(entry);
     recalcDayTotal(day);
-    saveAll(data);
+    saveAll(all);
 
     updateStreakAfterChange();
 
@@ -7791,9 +8045,9 @@ const questScore = baseScore + bonus;
     if(!ok) return;
 
     pushUndoSnapshot();
-    const data = loadAll();
-    data[todayKey] = { totalQps:0, quests:[] };
-    saveAll(data);
+    const all = loadAll();
+all.days[todayKey] = { totalQps:0, quests:[] };
+saveAll(all);
 
     gateResetForToday(true);
     syncGateRuntimeFromCfg();
@@ -7851,7 +8105,7 @@ const questScore = baseScore + bonus;
   }
   function renderDayView(dayKey){
     const data = loadAll();
-    const day = data[dayKey] || { totalQps:0, quests:[] };
+    const day = all.days?.[dayKey] || { totalQps:0, quests:[] };
     if(el.histTitle) el.histTitle.textContent = dayKey;
 
     if(!el.dayView) return;
@@ -7889,7 +8143,7 @@ const questScore = baseScore + bonus;
 
 function buildExportPayload(){
   return {
-    version: KEY_DATA,
+    version: "qpsData_v5",
     exportedAt: new Date().toISOString(),
     data: loadAll()
   };
@@ -7915,12 +8169,13 @@ function downloadJsonFile(filename, payload){
 }
 
 function validateImportedData(raw){
-  if(!raw || typeof raw !== "object") return false;
+  if(!raw || typeof raw !== "object" || Array.isArray(raw)) return false;
+  if(!raw.days || typeof raw.days !== "object" || Array.isArray(raw.days)) return false;
 
-  for(const dayKey of Object.keys(raw)){
-    const day = raw[dayKey];
+  for(const dayKey of Object.keys(raw.days)){
+    const day = raw.days[dayKey];
 
-    if(!day || typeof day !== "object") return false;
+    if(!day || typeof day !== "object" || Array.isArray(day)) return false;
     if(!Array.isArray(day.quests)) return false;
     if(typeof day.totalQps !== "number") return false;
   }
@@ -7930,31 +8185,97 @@ function validateImportedData(raw){
 
 function exportData(){
   const payload = buildExportPayload();
-  downloadJsonFile(`qpsData_v4_${localDateKey()}.json`, payload);
+  downloadJsonFile(`qpsData_v5_${localDateKey()}.json`, payload);
   showTimerWarn("Exported ✅ (ไฟล์อยู่ Downloads)");
 }
 
-function applyImportedData(imported, mode = "merge"){
-  const raw = imported?.data ?? imported;
+function normalizeImportedBackup(imported){
+  const raw = imported?.data ?? imported ?? {};
 
-  if(!validateImportedData(raw)){
-    alert("ไฟล์ไม่ถูกต้อง: โครงสร้างไม่ตรง qpsData_v4");
+  const result = {
+    state: {},
+    gateCfg: {},
+    profile: {},
+    streak: {},
+    days: {},
+    updatedAt: Date.now()
+  };
+
+  for(const [key, value] of Object.entries(raw)){
+    if(key === "state"){
+      result.state = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+      continue;
+    }
+
+    if(key === "gateCfg"){
+      result.gateCfg = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+      continue;
+    }
+
+    if(key === "profile"){
+      result.profile = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+      continue;
+    }
+
+    if(key === "streak"){
+      result.streak = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+      continue;
+    }
+
+    if(key === "updatedAt"){
+      result.updatedAt = Number(value) || Date.now();
+      continue;
+    }
+
+    if(key === "days"){
+      if(value && typeof value === "object" && !Array.isArray(value)){
+        for(const [dayKey, dayValue] of Object.entries(value)){
+          if(/^\d{4}-\d{2}-\d{2}$/.test(dayKey)){
+            result.days[dayKey] = dayValue;
+          }
+        }
+      }
+      continue;
+    }
+
+    if(key === "gate"){
+      // runtime gate เก่า ไม่ต้องย้ายเข้า core data
+      continue;
+    }
+
+    // daily records แบบเก่า: key เป็น YYYY-MM-DD
+    if(/^\d{4}-\d{2}-\d{2}$/.test(key)){
+      result.days[key] = value;
+    }
+  }
+
+  return result;
+}
+
+function applyImportedData(imported, mode = "merge"){
+  const normalized = normalizeImportedBackup(imported);
+
+  if(!validateImportedData(normalized)){
+    alert("ไฟล์ไม่ถูกต้องหรือไม่มี days ที่ใช้ได้");
     return false;
   }
 
   pushUndoSnapshot();
 
   if(mode === "replace"){
-    saveAll(raw);
+    saveAll(normalized);
   }else{
     const current = loadAll();
 
-    for(const dayKey of Object.keys(raw)){
-      const incomingDay = raw[dayKey];
-      const targetDay = ensureDay(current, dayKey);
+    current.state = normalized.state || current.state;
+    current.gateCfg = normalized.gateCfg || current.gateCfg;
+    current.profile = normalized.profile || current.profile;
+    current.streak = normalized.streak || current.streak;
+    current.updatedAt = normalized.updatedAt || Date.now();
 
-      targetDay.quests = targetDay.quests.concat(incomingDay.quests || []);
-      recalcDayTotal(targetDay);
+    for(const dayKey of Object.keys(normalized.days || {})){
+      const incomingDay = normalized.days[dayKey];
+      current.days[dayKey] = incomingDay;
     }
 
     saveAll(current);
@@ -7962,7 +8283,7 @@ function applyImportedData(imported, mode = "merge"){
 
   clearReportDraft();
   updateStreakAfterChange();
-  selectedDay = localDateKey();
+  historySelectedDay = localDateKey();
 
   if(hasQuestAfterTodayTrigger()){
     gate.passed = true;
@@ -7972,9 +8293,8 @@ function applyImportedData(imported, mode = "merge"){
 
   updateUI();
 
-  if(el.overlay?.classList.contains("show")){
-    renderHistoryDays();
-    renderDayView(selectedDay);
+  if(typeof renderHistoryPageStub === "function"){
+    renderHistoryPageStub();
   }
 
   showTimerWarn(`Imported ✅ (${mode.toUpperCase()})`);
@@ -8019,6 +8339,7 @@ function closeDataPanel(){
   panel.classList.remove("show");
   panel.setAttribute("aria-hidden", "true");
 }
+
 on($("dataPanel"), "click", (e)=>{
   if(e.target === $("dataPanel")) closeDataPanel();
 });
@@ -9070,7 +9391,7 @@ function getHistoryDaysByRange(range){
 }
 function getHistorySummary(range){
   const days = getHistoryDaysByRange(range);
-  const data = loadAll();
+  const all = loadAll();
 
   let totalQps = 0;
   let bestDayKey = "--";
@@ -9078,7 +9399,7 @@ function getHistorySummary(range){
   let currentStreak = 0;
 
   days.forEach(dayKey => {
-    const day = data[dayKey];
+    const day = all.days?.[dayKey];
     const score = day ? Number(day.totalQps || 0) : 0;
 
     totalQps += score;
@@ -9091,7 +9412,7 @@ function getHistorySummary(range){
 
   for(let i = days.length - 1; i >= 0; i--){
     const dayKey = days[i];
-    const day = data[dayKey];
+    const day = all.days?.[dayKey];
     const score = day ? Number(day.totalQps || 0) : 0;
 
     if(score > 0){
@@ -9114,7 +9435,7 @@ function getHistorySummary(range){
 
 function getHistoryExtraStats(range){
   const days = getHistoryDaysByRange(range);
-  const data = loadAll();
+  const all = loadAll();
 
   let productiveDays = 0;
   let deadDays = 0;
@@ -9122,7 +9443,7 @@ function getHistoryExtraStats(range){
   let currentRun = 0;
 
   days.forEach(dayKey => {
-    const day = data[dayKey];
+    const day = all.days?.[dayKey];
     const score = day ? Number(day.totalQps || 0) : 0;
 
     if(score > 0){
@@ -9142,8 +9463,8 @@ function getHistoryExtraStats(range){
   };
 }
 function getDayQuestLog(dayKey){
-  const data = loadAll();
-  const day = data[dayKey];
+  const all = loadAll();
+  const day = all.days?.[dayKey];
 
   if(!day || !Array.isArray(day.quests)) return [];
 
@@ -9384,7 +9705,7 @@ on($("appPage"), "scroll", updateTopNavActive, { passive:true });
 
 function getHistoryCategoryBreakdown(range){
   const days = getHistoryDaysByRange(range);
-  const data = loadAll();
+  const all = loadAll();
 
   const result = {
     "Learning": { score: 0, count: 0 },
@@ -9396,7 +9717,7 @@ function getHistoryCategoryBreakdown(range){
   let totalScore = 0;
 
   days.forEach(dayKey => {
-    const day = data[dayKey];
+    const day = all.days?.[dayKey];
     if(!day || !Array.isArray(day.quests)) return;
 
     day.quests.forEach(q => {
@@ -9420,14 +9741,14 @@ function getHistoryCategoryBreakdown(range){
   return result;
 }
 function getHistoryTrendData(range){
+  const all = loadAll();
   const days = getHistoryDaysByRange(range);
-  const data = loadAll();
 
-  return days.map(dayKey => {
-    const day = data[dayKey];
+  return days.map(dayKey=>{
+    const day = all.days?.[dayKey];
     return {
       dayKey,
-      score: day ? Number(day.totalQps || 0) : 0
+      total: day ? calcDayTotal(dayKey) : 0
     };
   });
 }
@@ -9455,13 +9776,13 @@ const innerH = height - padTop - padBottom - graphTopOffset;
 
 const chartBottomY = padTop + graphTopOffset + innerH;
 
-  const maxScore = Math.max(...points.map(p => p.score), 1);
+const maxScore = Math.max(...points.map(p => p.total), 1);
 
   const stepX = points.length > 1 ? innerW / (points.length - 1) : 0;
 
   const coords = points.map((p, i) => {
     const x = padLeft + (stepX * i);
-    const y = padTop + graphTopOffset + innerH - ((p.score / maxScore) * innerH);
+    const y = padTop + graphTopOffset + innerH - ((p.total / maxScore) * innerH);
     return {
       ...p,
       x,
@@ -9584,10 +9905,10 @@ const xLabels = coords.map((p, i) => {
 }
 function getHistoryDaysData(range){
   const days = getHistoryDaysByRange(range);
-  const data = loadAll();
+  const all = loadAll();
 
   return days.map(dayKey => {
-    const day = data[dayKey] || {};
+    const day = all.days?.[dayKey] || {};
     const quests = Array.isArray(day.quests) ? day.quests : [];
     const notes = Array.isArray(day.notes) ? day.notes : [];
     const totalQps = Number(day.totalQps || 0);
@@ -9816,7 +10137,7 @@ const HISTORY_CATEGORY_CONFIG = {
 
 function getCategoryMinutesByRange(range){
   const days = getHistoryDaysByRange(range);
-  const data = loadAll();
+  const all = loadAll();
 
   const totals = {
     "Learning": 0,
@@ -9826,7 +10147,7 @@ function getCategoryMinutesByRange(range){
   };
 
   days.forEach(dayKey => {
-    const day = data[dayKey];
+    const day = all.days?.[dayKey];
     if(!day || !Array.isArray(day.quests)) return;
 
     day.quests.forEach(raw => {
@@ -9911,8 +10232,8 @@ function renderHistoryCategoryStats(){
 }
 function getHistoryTodayScore(){
   const todayKey = localDateKey();
-  const data = loadAll();
-  const today = data[todayKey];
+  const all = loadAll();
+  const today = all.days?.[todayKey];
   return Number(today?.totalQps || 0);
 }
 
@@ -9932,14 +10253,14 @@ function renderHistoryTodayBadge(){
 }
 
 function getHistoryChangeData(range){
-  const data = loadAll();
+  const all = loadAll();
   const todayKey = localDateKey();
-  const todayScore = Number(data[todayKey]?.totalQps || 0);
+  const todayScore = Number(all.days?.[todayKey]?.totalQps || 0);
 
   // 2D = เทียบเมื่อวานตรงๆ
   if(range === "2d"){
     const yesterdayKey = addDays(todayKey, -1);
-    const yesterdayScore = Number(data[yesterdayKey]?.totalQps || 0);
+    const yesterdayScore = Number(all.days?.[yesterdayKey]?.totalQps || 0);
 
     if(yesterdayScore === 0){
       if(todayScore === 0){
@@ -9959,7 +10280,7 @@ function getHistoryChangeData(range){
 
   // 3D / 7D / 30D / ALL = วันนี้เทียบกับค่าเฉลี่ยของช่วงที่เลือก
   const days = getHistoryDaysByRange(range);
-  const scores = days.map(dayKey => Number(data[dayKey]?.totalQps || 0));
+  const scores = days.map(dayKey => Number(all.days?.[dayKey]?.totalQps || 0));
   const avg = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
 
   if(avg === 0){
