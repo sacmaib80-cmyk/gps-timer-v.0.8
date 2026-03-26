@@ -4667,23 +4667,27 @@ linear-gradient(
   </div>
 
   <!-- Bottom Navigation -->
-  <nav class="bottomNav" aria-label="Main Navigation">
-    <button class="bottomNavBtn active" type="button" data-page="homeScene">
-      <span>🏠</span>
-      <span>Home</span>
-    </button>
-    <button class="bottomNavBtn" type="button" data-page="appPage" data-target="timer">
-      <span>⏱️</span>
-      <span>Timer</span>
+<nav class="bottomNav" aria-label="Main Navigation">
+  <button class="bottomNavBtn active" type="button" data-page="homeScene">
+    <span>🏠</span>
+    <span>Home</span>
+  </button>
+
+  <button class="bottomNavBtn" type="button" data-page="appPage" data-target="timer">
+    <span>⏱️</span>
+    <span>Timer</span>
+  </button>
+
   <button class="bottomNavBtn" type="button" data-page="historyPage">
-  <span>📈</span>
-  <span>History</span>
-</button>
-    <button class="bottomNavBtn" type="button" data-page="appPage" data-target="menu">
-      <span>☰</span>
-      <span>Menu</span>
-    </button>
-  </nav>
+    <span>📈</span>
+    <span>History</span>
+  </button>
+
+  <button class="bottomNavBtn" type="button" data-page="appPage" data-target="menu">
+    <span>☰</span>
+    <span>Menu</span>
+  </button>
+</nav>
 
   <!-- Sakura Action Lock Bar -->
   <div id="actionLockBar" class="actionLockBar" aria-hidden="true">
@@ -4699,9 +4703,6 @@ linear-gradient(
       </div>
     </div>
   </div>
-
-
-</body>
 
 <div id="authGate" class="authGate" aria-hidden="false">
   <div class="authCard">
@@ -6855,6 +6856,31 @@ const SQ_DICE_GEN = {
 function rqPickOne(arr){
   if(!Array.isArray(arr) || arr.length === 0) return null;
   return arr[Math.floor(Math.random() * arr.length)];
+}
+function rqWeightedPick(items){
+  if(!Array.isArray(items) || items.length === 0) return null;
+
+  const valid = items.filter(x =>
+    x && typeof x === "object" && "value" in x && Number(x.weight) > 0
+  );
+
+  if(valid.length === 0){
+    return items[0]?.value ?? null;
+  }
+
+  const total = valid.reduce((sum, item) => sum + Number(item.weight || 0), 0);
+  if(total <= 0){
+    return valid[0]?.value ?? null;
+  }
+
+  let r = Math.random() * total;
+
+  for(const item of valid){
+    r -= Number(item.weight || 0);
+    if(r <= 0) return item.value;
+  }
+
+  return valid[valid.length - 1]?.value ?? null;
 }
 function rqHash(str){
   let h = 2166136261;
