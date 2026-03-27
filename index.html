@@ -6021,17 +6021,27 @@ const raw = localStorage.getItem(makeScopedKey(KEY_GATE));
 }
   }
   function syncGateRuntimeFromCfg(){
-    gate.enabled = isGateActiveToday();
-    gate.triggerHHMM = gateCfg.triggerHHMM || null;
+  gate.enabled = isGateActiveToday();
+  gate.triggerHHMM = gateCfg.triggerHHMM || null;
 
-    if(!gate.enabled){
-      gate.startedAt = 0;
-      gate.locked = false;
-      gate.unlocked = true;
-      gate.passed = hasQuestAfterTodayTrigger() ? true : false;
-      saveGate();
-    }
+  if(!gate.enabled){
+    gate.startedAt = 0;
+    gate.locked = false;
+    gate.unlocked = false;
+    gate.unlockReason = "";
+    gate.passed = false;
+    gate.firstQuestStartAt = 0;
+    gate.doneBannerUntil = 0;
+    saveGate();
+    return;
   }
+
+  if(hasQuestAfterTodayTrigger()){
+    gate.passed = true;
+    gate.locked = false;
+    saveGate();
+  }
+}
   function gateWorldStartTs(){ return todayTriggerTs() || 0; }
   function gateWorldDeadlineTs(){ return todayDeadlineTs() || 0; }
 
@@ -7894,11 +7904,13 @@ if(state.cutEnabled && state.cutMinutes){
   questFinished = false;
 
   saveState();
-  clearSubmitMessages();
-  setReportVisible(false);
-  updateUI();
+clearSubmitMessages();
+setReportVisible(false);
 
-  if(
+if(!tickHandle) startTick();
+updateUI();
+
+if(
   isGateActiveToday() &&
   gateIsWorldActiveNow() &&
   !gate.passed &&
@@ -8788,21 +8800,27 @@ on(el.notes, "input", saveReportDraft);
       return;
     }
     gateCfg.enabled = !gateCfg.enabled;
-    saveGateCfg();
-    syncGateRuntimeFromCfg();
+saveGateCfg();
+syncGateRuntimeFromCfg();
 
-    if(!gateCfg.enabled){
-      hideGateCover();
-      hideGateTopBar();
-    }
+if(!gateCfg.enabled){
+  hideGateCover();
+  hideGateTopBar();
+  renderGatePageUI();
+  renderGateTogglePill();
+  gateEnforceStartButton();
+  rqShowIfEligible();
+  showTimerWarn("Morning Gate: OFF");
+  return;
+}
 
-    renderGatePageUI();
-    renderGateTogglePill();
-    renderGateUX();
-    gateEnforceStartButton();
-    rqShowIfEligible();
+renderGatePageUI();
+renderGateTogglePill();
+renderGateUX();
+gateEnforceStartButton();
+rqShowIfEligible();
 
-    showTimerWarn(gateCfg.enabled ? "Morning Gate: ON" : "Morning Gate: OFF");
+showTimerWarn("Morning Gate: ON");
   });
 
   // Trigger change inside Gate Page
