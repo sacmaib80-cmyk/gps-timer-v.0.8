@@ -4253,7 +4253,7 @@ linear-gradient(
             </div>
 
             <div class="hint" style="margin-top:12px;">
-              Base = minutes × 0.4 • Bonus = 0/+2/+4/+6 (เฉพาะเวลา ≥ 30 นาที) •
+              Base = minutes × 0.4 • Bonus = 0/+2/+4/+6 (เฉพาะเวลา ≥ 25 นาที) •
               <b>Cap:</b> Base cap ต่อ “Quest Name” ต่อวัน = 60 นาที (ชื่อซ้ำไม่ได้)
             </div>
           </div>
@@ -4325,6 +4325,9 @@ linear-gradient(
             <button type="button" id="toggleMethodChangeBtn" class="secondary smallBtn">
   + เพิ่ม Method Change (+4)
 </button>
+<button type="button" id="toggleClaimBtn" class="secondary smallBtn">
+  + ยืนยัน Behavior (+6)
+</button>
 
 <div id="methodChangeWrap" hidden>
   <div class="divider"></div>
@@ -4346,6 +4349,20 @@ linear-gradient(
       <textarea id="insightTo" placeholder="เช่น เปิดแอปแล้วกดเริ่มเควสใน 1 นาที"></textarea>
     </div>
   </div>
+</div>
+<div id="claimKeyResult" class="hint" hidden></div>
+
+<div class="divider"></div>
+<div id="claimWrap" hidden>
+<div>
+  <label for="claimKeyInput">Claim Key (+6)</label>
+  <input id="claimKeyInput" type="text" placeholder="ใส่ key จาก +4 ของเมื่อวาน">
+</div>
+
+<div>
+  <label for="claimProof">Proof / วันนี้เปลี่ยนพฤติกรรมยังไง</label>
+  <textarea id="claimProof" placeholder="เช่น วันนี้เปิดแอปแล้วกดเริ่มเควสภายใน 1 นาทีจริง"></textarea>
+</div>
 </div>
 
 
@@ -4832,6 +4849,30 @@ linear-gradient(
   </div>
 </div>
 
+<!-- KEY -->
+
+<div id="claimResultOverlay" class="overlay">
+  <div class="card overlay-card" style="width:min(420px, calc(100vw - 24px)); margin-bottom:24px;">
+    <div class="sectionHead" style="margin-top:0;">
+      <h2>✅ Claim Key Ready</h2>
+    </div>
+
+    <div class="hint" id="claimResultText" style="margin-top:0;">
+      ระบบสร้าง Claim Key เรียบร้อยแล้ว
+    </div>
+
+    <div style="margin-top:12px;">
+      <label for="claimResultKey">Claim Key</label>
+      <input id="claimResultKey" type="text" readonly>
+    </div>
+
+    <div class="btns" style="margin-top:14px; grid-template-columns:1fr 1fr;">
+      <button type="button" id="copyClaimKeyBtn" class="secondary">Copy</button>
+      <button type="button" id="closeClaimResultBtn">OK</button>
+    </div>
+  </div>
+</div>
+
 
 <script type="module" src="auth.js"></script>
 
@@ -5191,6 +5232,7 @@ function isLowQualityInsightText(text){
 } 
 
 function calcInsightBonusV2({
+  
   minutes,
   note,
   why,
@@ -5220,6 +5262,64 @@ function calcInsightBonusV2({
   if(passPlus4) return 4;
   if(passPlus2) return 2;
   return 0;
+}
+
+function makeClaimKey(dateKey, questName){
+  const raw = `${dateKey}__${normQuestName(questName)}__${Math.random().toString(36).slice(2,8)}`;
+  return raw.toUpperCase();
+}
+
+function getDayEntryByClaimKey(claimKey){
+  const key = String(claimKey || "").trim().toUpperCase();
+  if(!key) return null;
+
+  const all = loadAll();
+  const days = all.days || {};
+
+  for(const dateKey of Object.keys(days)){
+    const day = days[dateKey];
+    if(!day?.quests) continue;
+
+    for(const q of day.quests){
+      if(String(q.claimKey || "").trim().toUpperCase() === key){
+        return { dateKey, quest: q };
+      }
+    }
+  }
+
+  return null;
+}
+
+function canClaimPlus6({
+  claimKey,
+  proof,
+  currentDateKey,
+  currentQuestName
+}){
+  const key = String(claimKey || "").trim().toUpperCase();
+  const proofText = String(proof || "").trim();
+  if(!key) return { ok:false, reason:"missing_key" };
+  if(proofText.length < 20) return { ok:false, reason:"proof_too_short" };
+  if(isLowQualityInsightText(proofText)) return { ok:false, reason:"proof_low_quality" };
+
+  const found = getDayEntryByClaimKey(key);
+  if(!found) return { ok:false, reason:"key_not_found" };
+
+  const srcDateKey = found.dateKey;
+  const srcQuest = found.quest;
+
+  if(!srcQuest) return { ok:false, reason:"key_not_found" };
+  if(Number(srcQuest.bonus || 0) < 4) return { ok:false, reason:"not_plus4_source" };
+  if(srcQuest.claimResolved) return { ok:false, reason:"already_used" };
+
+  const sameQuest =
+    normQuestName(srcQuest.questName || srcQuest.name || "") === normQuestName(currentQuestName || "");
+  if(!sameQuest) return { ok:false, reason:"quest_not_match" };
+
+  const expectedDate = addDays(srcDateKey, 1);
+  if(currentDateKey !== expectedDate) return { ok:false, reason:"not_next_day" };
+
+  return { ok:true, sourceDateKey: srcDateKey, sourceQuest: srcQuest };
 }
 
 
@@ -5741,6 +5841,16 @@ methodChangeWrap: $("methodChangeWrap"),
 insightWhy: $("insightWhy"),
 insightFrom: $("insightFrom"),
 insightTo: $("insightTo"),
+claimKeyInput: $("claimKeyInput"),
+claimProof: $("claimProof"),
+claimResultOverlay: $("claimResultOverlay"),
+claimResultText: $("claimResultText"),
+claimResultKey: $("claimResultKey"),
+copyClaimKeyBtn: $("copyClaimKeyBtn"),
+closeClaimResultBtn: $("closeClaimResultBtn"),
+claimKeyResult: $("claimKeyResult"),
+toggleClaimBtn: $("toggleClaimBtn"),
+claimWrap: $("claimWrap"),
     draftHint: $("draftHint"),
     bonusRuleHint: $("bonusRuleHint"),
     capHint: $("capHint"),
@@ -8141,6 +8251,7 @@ saveState();
   setReportVisible(true);
 
   setMethodChangeOpen(false);
+  setClaimOpen(false);
 refreshInsightHint();
 
   saveReportDraft();
@@ -8167,6 +8278,8 @@ clearCutDeadline();
   saveState();
   setReportVisible(false);
   clearSubmitMessages();
+  clearReportDraft();
+clearReportFormFields();
   updateUI();
 
   activeQuest = null;
@@ -8205,18 +8318,44 @@ if(minutes < RULES.bonusMinMinutes && el.qualityBonus){
   el.qualityBonus.value = "0";
 }
 
-const bonus = calcInsightBonusV2({
+const plus4Bonus = calcInsightBonusV2({
   minutes,
   note: el.notes?.value || "",
   why: el.insightWhy?.value || "",
   fromBehavior: el.insightFrom?.value || "",
   toBehavior: el.insightTo?.value || ""
 });
+
+const plus6Check = canClaimPlus6({
+  claimKey: el.claimKeyInput?.value || "",
+  proof: el.claimProof?.value || "",
+  currentDateKey: dateKey,
+  currentQuestName: qn
+});
+
+let bonus = plus4Bonus;
+let generatedClaimKey = "";
+
+if(plus6Check.ok){
+  bonus = Math.max(bonus, 6);
+}else if(plus4Bonus >= 4){
+  generatedClaimKey = makeClaimKey(dateKey, qn);
+}
+
+showGeneratedClaimKey(generatedClaimKey);
 const questScore = baseScore + bonus;
 
     pushUndoSnapshot();
 
     const entry = {
+      insightWhy: (el.insightWhy?.value || "").trim(),
+insightFrom: (el.insightFrom?.value || "").trim(),
+insightTo: (el.insightTo?.value || "").trim(),
+
+claimKey: generatedClaimKey || "",
+claimSourceKey: (el.claimKeyInput?.value || "").trim().toUpperCase(),
+claimProof: (el.claimProof?.value || "").trim(),
+claimResolved: false,
       ts: Date.now(),
       dateKey,
       category: state.selectedCategory,
@@ -8233,6 +8372,7 @@ const questScore = baseScore + bonus;
         if(extra) return extra;
         return base;
       })()
+      
     };
 
     const all = loadAll();
@@ -8240,6 +8380,13 @@ const day = ensureDay(all.days, dateKey);
     day.quests.push(entry);
     recalcDayTotal(day);
     saveAll(all);
+    clearReportDraft();
+clearReportFormFields();
+
+    if(plus6Check.ok && plus6Check.sourceQuest){
+  plus6Check.sourceQuest.claimResolved = true;
+  plus6Check.sourceQuest.claimResolvedAt = dateKey;
+}
 
     updateStreakAfterChange();
 
@@ -8249,9 +8396,20 @@ const day = ensureDay(all.days, dateKey);
       el.submitOk.textContent = `Saved! +${round1(questScore).toFixed(1)}${capMsg}`;
     }
 
+    if(generatedClaimKey && el.submitOk){
+  el.submitOk.style.display = "block";
+  el.submitOk.textContent = `Saved! Claim Key: ${generatedClaimKey}`;
+}
+
     if(el.notes) el.notes.value = "";
     clearReportDraft();
-    setTimeout(()=>{ discardReport(); }, 320);
+    setTimeout(()=>{
+  discardReport();
+
+  if(generatedClaimKey){
+    openClaimResult(generatedClaimKey);
+  }
+}, 320);
   }
 
   function resetToday(){
@@ -8680,17 +8838,63 @@ function toggleMethodChange(){
   const isHidden = el.methodChangeWrap.hasAttribute("hidden");
   setMethodChangeOpen(isHidden);
 }
+function setClaimOpen(open){
+  if(!el.claimWrap || !el.toggleClaimBtn) return;
+
+  if(open){
+    el.claimWrap.removeAttribute("hidden");
+    el.toggleClaimBtn.textContent = "− ซ่อน Behavior (+6)";
+  }else{
+    el.claimWrap.setAttribute("hidden", "");
+    el.toggleClaimBtn.textContent = "+ ยืนยัน Behavior (+6)";
+  }
+}
+
+function showGeneratedClaimKey(key){
+  if(!el.claimKeyResult) return;
+
+  const v = String(key || "").trim();
+  if(!v){
+    el.claimKeyResult.textContent = "";
+    el.claimKeyResult.hidden = true;
+    return;
+  }
+
+  el.claimKeyResult.textContent = `Claim Key: ${v}`;
+  el.claimKeyResult.hidden = false;
+}
+
+function toggleClaim(){
+  if(!el.claimWrap) return;
+  const isHidden = el.claimWrap.hasAttribute("hidden");
+  setClaimOpen(isHidden);
+}
 
 function refreshInsightHint(){
   const minutes = Math.max(0, Math.round((state.lastElapsedMs || 0) / 60000));
+  const dateKey = state.startDateKey || localDateKey();
+  const qn = normQuestName(state.questName || el.questName?.value || "");
 
-  const bonus = calcInsightBonusV2({
+  const plus4Bonus = calcInsightBonusV2({
     minutes,
     note: el.notes?.value || "",
     why: el.insightWhy?.value || "",
     fromBehavior: el.insightFrom?.value || "",
     toBehavior: el.insightTo?.value || ""
   });
+
+  const plus6Check = canClaimPlus6({
+    claimKey: el.claimKeyInput?.value || "",
+    proof: el.claimProof?.value || "",
+    currentDateKey: dateKey,
+    currentQuestName: qn
+  });
+
+  const hasKey = (el.claimKeyInput?.value || "").trim().length > 0;
+
+if(hasKey){
+  setClaimOpen(true);
+}
 
   if(!el.bonusRuleHint) return;
 
@@ -8699,26 +8903,34 @@ function refreshInsightHint(){
     return;
   }
 
-  if(bonus >= 4){
+  if(plus6Check.ok){
+    el.bonusRuleHint.textContent = "Insight Bonus: พร้อมได้ +6";
+    return;
+  }
+
+  if(plus4Bonus >= 4){
     el.bonusRuleHint.textContent = "Insight Bonus: พร้อมได้ +4";
     return;
   }
 
-  if(bonus >= 2){
+  if(plus4Bonus >= 2){
     el.bonusRuleHint.textContent = "Insight Bonus: พร้อมได้ +2";
     return;
   }
 
-  el.bonusRuleHint.textContent = "Insight Bonus: เขียน insight ให้ชัดกว่านี้";
+  el.bonusRuleHint.textContent = "Insight Bonus: เขียน insight / proof ให้ชัดกว่านี้";
 }
 
 function saveReportDraft(){
  const draft = {
+  claimKeyInput: el.claimKeyInput?.value || "",
+claimProof: el.claimProof?.value || "",
   bonus: el.qualityBonus?.value || "0",
   notes: el.notes?.value || "",
   insightWhy: el.insightWhy?.value || "",
   insightFrom: el.insightFrom?.value || "",
   insightTo: el.insightTo?.value || ""
+  
 };
 
 localStorage.setItem(makeScopedKey(REPORT_DRAFT_KEY), JSON.stringify(draft));
@@ -8759,6 +8971,13 @@ refreshInsightHint();
     if(el.insightWhy) el.insightWhy.value = d.insightWhy || "";
 if(el.insightFrom) el.insightFrom.value = d.insightFrom || "";
 if(el.insightTo) el.insightTo.value = d.insightTo || "";
+if(el.claimKeyInput) el.claimKeyInput.value = d.claimKeyInput || "";
+if(el.claimProof) el.claimProof.value = d.claimProof || "";
+
+const hasClaimDraft =
+  !!(d.claimKeyInput || d.claimProof);
+
+setClaimOpen(hasClaimDraft);
 
 const hasMethodChangeDraft =
   !!(d.insightWhy || d.insightFrom || d.insightTo);
@@ -8822,6 +9041,67 @@ function toggleMethodChange(){
 
 function clearReportDraft(){
 localStorage.removeItem(makeScopedKey(REPORT_DRAFT_KEY));
+
+}
+
+function openClaimResult(key){
+  if(!el.claimResultOverlay || !el.claimResultKey) return;
+
+  const v = String(key || "").trim();
+  if(!v) return;
+
+  if(el.claimResultText){
+    el.claimResultText.textContent = "ระบบสร้าง Claim Key เรียบร้อยแล้ว — ใช้กับเควสเดิมของวันถัดไปเพื่อยืนยัน +6";
+  }
+
+  el.claimResultKey.value = v;
+  el.claimResultOverlay.classList.add("show");
+}
+
+function closeClaimResult(){
+  if(el.claimResultOverlay){
+    el.claimResultOverlay.classList.remove("show");
+  }
+  if(el.claimResultKey){
+    el.claimResultKey.value = "";
+  }
+}
+
+async function copyClaimResultKey(){
+  const key = el.claimResultKey?.value || "";
+  if(!key) return;
+
+  try{
+    await navigator.clipboard.writeText(key);
+    if(el.claimResultText){
+      el.claimResultText.textContent = "คัดลอก Claim Key แล้ว ✅";
+    }
+  }catch(e){
+    if(el.claimResultText){
+      el.claimResultText.textContent = "คัดลอกไม่สำเร็จ ลองคัดลอกเองจากช่องด้านล่าง";
+    }
+  }
+}
+
+function clearReportFormFields(){
+  if(el.reportMinutes) el.reportMinutes.value = "";
+  if(el.notes) el.notes.value = "";
+
+  if(el.insightWhy) el.insightWhy.value = "";
+  if(el.insightFrom) el.insightFrom.value = "";
+  if(el.insightTo) el.insightTo.value = "";
+
+  if(el.claimKeyInput) el.claimKeyInput.value = "";
+  if(el.claimProof) el.claimProof.value = "";
+
+  if(el.qualityBonus){
+    el.qualityBonus.value = "0";
+    el.qualityBonus.disabled = true;
+  }
+
+  setMethodChangeOpen(false);
+  setClaimOpen(false);
+  refreshInsightHint();
 }
 
 
@@ -8877,8 +9157,16 @@ if(!Number.isFinite(minutes) || minutes <= 0){
   });
   on(el.submitReportBtn, "click", submitReport);
   on(el.discardBtn, "click", discardReport);
+  on(el.copyClaimKeyBtn, "click", copyClaimResultKey);
+on(el.closeClaimResultBtn, "click", closeClaimResult);
+on(el.claimResultOverlay, "click", (e)=>{
+  if(e.target === el.claimResultOverlay){
+    closeClaimResult();
+  }
+});
 
   on(el.toggleMethodChangeBtn, "click", toggleMethodChange);
+  on(el.toggleClaimBtn, "click", toggleClaim);
 
 on(el.reportMinutes, "input", saveReportDraft);
 on(el.qualityBonus, "change", saveReportDraft);
@@ -8898,6 +9186,15 @@ on(el.insightFrom, "input", ()=>{
 });
 
 on(el.insightTo, "input", ()=>{
+  saveReportDraft();
+  refreshInsightHint();
+});
+on(el.claimKeyInput, "input", ()=>{
+  saveReportDraft();
+  refreshInsightHint();
+});
+
+on(el.claimProof, "input", ()=>{
   saveReportDraft();
   refreshInsightHint();
 });
