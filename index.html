@@ -6449,8 +6449,14 @@ const raw = localStorage.getItem(makeScopedKey(KEY_GATE));
       gateResetForToday(true);
     }
 
-    gateApplyQuestTruth();
-saveGate();
+    const prevPassed = gate.passed;
+const prevLocked = gate.locked;
+
+gateApplyQuestTruth();
+
+if(gate.passed !== prevPassed || gate.locked !== prevLocked){
+  saveGate("loadGate:truth-sync");
+}
   }
   function gateApplyQuestTruth(){
   if(hasQuestAfterTodayTrigger()){
@@ -6533,21 +6539,24 @@ function gateIsWorldActiveNow(){
     el.gateTopBar.classList.remove("done");
   }
 
-  function gateMaybeLock(){
+ function gateMaybeLock(){
   if(!isGateActiveToday()) return;
   if(gate.passed || hasQuestAfterTodayTrigger()) return;
-  if(!gateIsWorldActiveNow()) return;
 
   const now = Date.now();
+  const start = gateWorldStartTs();
   const deadline = gateWorldDeadlineTs();
 
-  if(!deadline) return;
+  if(!start || !deadline) return;
 
-  // ✅ ถ้าเคย unlock แล้ว ห้าม lock ทับตอน refresh/reload
+  // ก่อน trigger ยังไม่ต้องทำอะไร
+  if(now < start) return;
+
+  // ถ้าเคย unlock แล้ว ห้าม lock ทับ
   if(gate.unlocked){
     if(gate.locked){
       gate.locked = false;
-      saveGate();
+      saveGate("gateMaybeLock:unlocked-clear");
     }
     return;
   }
@@ -6556,27 +6565,28 @@ function gateIsWorldActiveNow(){
   if(now <= deadline){
     if(gate.locked){
       gate.locked = false;
-      saveGate();
+      saveGate("gateMaybeLock:before-deadline-clear");
     }
     return;
   }
 
   // เลย deadline แล้ว
-
-  // ถ้ายังไม่เคยเริ่มเควสทัน -> lock/fail ได้เลย
   if(!gate.startedInTime){
-    gate.locked = true;
-    gate.awaitingGateResult = false;
-    if(!gate.startedAt) gate.startedAt = gateWorldStartTs();
-    saveGate();
+    if(!gate.locked || gate.awaitingGateResult){
+      gate.locked = true;
+      gate.awaitingGateResult = false;
+      if(!gate.startedAt) gate.startedAt = start;
+      saveGate("gateMaybeLock:deadline-fail-lock");
+    }
     return;
   }
 
-  // ถ้าเริ่มเควสทันแล้ว -> ยังไม่ lock
-  // รอผล submit/discard แม้เวลาจะเหลือ 00:00
-  gate.locked = false;
-  gate.awaitingGateResult = true;
-  saveGate();
+  // เริ่มทันแล้ว -> รอผล submit/discard
+  if(gate.locked || !gate.awaitingGateResult){
+    gate.locked = false;
+    gate.awaitingGateResult = true;
+    saveGate("gateMaybeLock:deadline-await-result");
+  }
 }
 console.log("[GATE after gateMaybeLock]", {
   locked: gate.locked,
