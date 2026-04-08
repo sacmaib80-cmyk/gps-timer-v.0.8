@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>SakuraQ v0.12.0 </title>
+    <title>SakuraQ v0.12.0A </title>
 
     <link rel="manifest" href="./manifest.webmanifest">
 
@@ -4415,7 +4415,7 @@ span {
                   <div class="brandMeta">
                     <div class="brandTitleRow">
                       <h1>SakuraQ</h1>
-                      <span class="versionBadge">v0.12.0</span>
+                      <span class="versionBadge">v0.12.0A</span>
                     </div>
                     <div class="sub" id="todayText">Today: ----</div>
                   </div>
@@ -6410,7 +6410,12 @@ extend10Btn: $("extend10Btn"),
   softWarned: false,
   softDeadlineTs: 0,
 
-  targetEndTs: 0
+  targetEndTs: 0,
+
+  flowBaseName: "",
+  flowIndex: 1,
+  flowChainId: null,
+  pendingSegments: [],
 };
   let tickHandle = null;
 
@@ -6476,7 +6481,12 @@ function resetRuntimeForAccountSwitch(){
     softWarned: false,
     softDeadlineTs: 0,
 
-    targetEndTs: 0
+    targetEndTs: 0,
+
+     flowBaseName: "",
+    flowIndex: 1,
+    flowChainId: null,
+    pendingSegments: [],
   };
 
   gate = {
@@ -7603,9 +7613,14 @@ function checkAutoStop(){
       return;
     }
 
-    if(state.softWarned && state.softDeadlineTs && now >= state.softDeadlineTs){
-      forceAutoStop();
-    }
+    if(state.targetEndTs && now >= state.targetEndTs){
+  if(willCurrentRunHitBaseCapNow()){
+    const didSplit = splitCurrentQuestSegmentAtCap();
+    if(didSplit) return;
+  }
+
+  forceAutoStop();
+}
 
     return;
   }
@@ -7617,6 +7632,22 @@ function checkAutoStop(){
     forceAutoStop();
   }
 }
+
+function willCurrentRunHitBaseCapNow(){
+  const qn = normQuestName(state.questName || "");
+  if(!qn) return false;
+
+  const dateKey = state.startDateKey || localDateKey();
+  const usedBefore = calcQuestBaseMinutesUsed(dateKey, qn);
+
+  const elapsedMinNow = Math.max(
+    0,
+    Math.round(((state.status === "paused") ? state.elapsedBefore : computeElapsedMs()) / 60000)
+  );
+
+  return (usedBefore + elapsedMinNow) >= Number(RULES.baseCapPerQuestNamePerDay || 60);
+}
+
   function renderTimer(){
     if(!el.timerText) return;
     const ms = (state.status==="stopped") ? state.lastElapsedMs : computeElapsedMs();
@@ -7751,6 +7782,32 @@ function extendCurrentQuestBy(extraMinutes){
     showTimerWarn(`เพิ่มเวลา +${addMin} นาทีแล้ว • เหลือประมาณ ${remainMinAfter} นาที • แต่ base ของ "${normQuestName(state.questName)}" วันนี้อาจตันที่ ${RULES.baseCapPerQuestNamePerDay} นาที`);
   }else{
     showTimerWarn(`เพิ่มเวลา +${addMin} นาทีแล้ว • เหลือประมาณ ${remainMinAfter} นาที`);
+  }
+}
+function buildFlowQuestName(baseName, index){
+  const base = normQuestName(baseName || "");
+  if(!base) return "";
+  return index <= 1 ? base : `${base} ${index}`;
+}
+
+function ensureFlowMetaForCurrentQuest(){
+  const currentName = normQuestName(state.questName || "");
+  if(!currentName) return;
+
+  if(!state.flowBaseName){
+    state.flowBaseName = currentName;
+  }
+
+  if(!state.flowIndex || state.flowIndex < 1){
+    state.flowIndex = 1;
+  }
+
+  if(!state.flowChainId){
+    state.flowChainId = Date.now();
+  }
+
+  if(!Array.isArray(state.pendingSegments)){
+    state.pendingSegments = [];
   }
 }
   function renderCutUI(){
@@ -9028,6 +9085,11 @@ if(state.cutEnabled && state.cutMinutes){
   questDurationMs = (state.cutEnabled && state.cutMinutes) ? state.cutMinutes * 60000 : 0;
   questEndTime = questDurationMs ? (questStartTime + questDurationMs) : null;
   questFinished = false;
+  
+    state.flowBaseName = normQuestName(state.questName || "");
+  state.flowIndex = 1;
+  state.flowChainId = Date.now();
+  state.pendingSegments = [];
 
   saveState();
 clearSubmitMessages();
@@ -9062,6 +9124,64 @@ if(
 
   saveGate();
 }
+}
+
+function splitCurrentQuestSegmentAtCap(){
+  ensureFlowMetaForCurrentQuest();
+
+  const currentName = normQuestName(state.questName || "");
+  if(!currentName) return false;
+
+  const capMin = Number(RULES.baseCapPerQuestNamePerDay || 60);
+
+  state.pendingSegments.push({
+    chainId: state.flowChainId,
+    flowBaseName: state.flowBaseName,
+    index: state.flowIndex,
+    questName: currentName,
+    minutes: capMin,
+    createdAt: Date.now(),
+  });
+
+  state.flowIndex += 1;
+
+  const nextName = buildFlowQuestName(state.flowBaseName, state.flowIndex);
+  state.questName = nextName;
+
+  state.startTs = Date.now();
+  state.elapsedBefore = 0;
+  state.lastElapsedMs = 0;
+  state.startDateKey = localDateKey();
+
+  if(state.cutEnabled && state.cutMinutes){
+    state.targetEndTs = Date.now() + (Number(state.cutMinutes) * 60000);
+    state.softWarned = false;
+    state.softDeadlineTs = 0;
+  }else{
+    state.targetEndTs = 0;
+    state.softWarned = false;
+    state.softDeadlineTs = 0;
+  }
+
+  saveState();
+
+  if(el.questName) el.questName.value = state.questName || "";
+  renderCutUI();
+  renderControls();
+  updateUI();
+
+  showTimerWarn(`ครบ ${capMin} นาทีแล้ว • แยกเป็น "${nextName}" อัตโนมัติ`);
+  return true;
+}
+
+function currentQuestReachedDailyBaseCap(){
+  const qn = normQuestName(state.questName || "");
+  if(!qn) return false;
+
+  const dateKey = state.startDateKey || localDateKey();
+  const used = calcQuestBaseMinutesUsed(dateKey, qn);
+
+  return used >= Number(RULES.baseCapPerQuestNamePerDay || 60);
 }
 
 function pauseQuest(){
@@ -9121,6 +9241,9 @@ state.elapsedBefore = elapsed;
 state.lastElapsedMs = elapsed;
 
 clearCutDeadline();
+
+  // stop จริง = จบ flow นี้
+  state.flowBaseName = state.flowBaseName || normQuestName(state.questName || "");
 
 questFinished = true;
 saveState();
