@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>SakuraQ v0.12.0A </title>
+    <title>SakuraQ v0.12.1 </title>
 
     <link rel="manifest" href="./manifest.webmanifest">
 
@@ -4415,7 +4415,7 @@ span {
                   <div class="brandMeta">
                     <div class="brandTitleRow">
                       <h1>SakuraQ</h1>
-                      <span class="versionBadge">v0.12.0A</span>
+                      <span class="versionBadge">v0.12.1</span>
                     </div>
                     <div class="sub" id="todayText">Today: ----</div>
                   </div>
@@ -5233,6 +5233,8 @@ window.sqCloud = { doc, setDoc, getDoc };
 </script>
 
   <script>
+    window.__BUILD_MARKER__ = "split-test-1";
+console.log("[BUILD]", window.__BUILD_MARKER__);
     console.log("TOP SCRIPT RUN");
 /* =========================================================
   QPS Timer v0.6.x — Full JS (Safe/Null-Guard) + Gate Page v2
@@ -5394,8 +5396,8 @@ let tabHeartbeat = null;
   });
 }
   function normQuestName(name){
-    return (name || "").trim().replace(/\s+/g," ");
-  }
+  return (name || "").trim();
+}
   function sanitizeDigitsOnly(v){ return String(v ?? "").replace(/[^\d]/g,""); }
   function parseHHMM(s){
     const m = String(s||"").match(/^(\d{2}):(\d{2})$/);
@@ -7546,6 +7548,19 @@ function clearCutDeadline(){
 }
 
 function forceAutoStop(){
+  console.log("[FORCE AUTOSTOP HIT]", {
+    status: state.status,
+    startTs: state.startTs,
+    targetEndTs: state.targetEndTs,
+    softWarned: state.softWarned,
+    softDeadlineTs: state.softDeadlineTs,
+    elapsedBefore: state.elapsedBefore,
+    lastElapsedMs: state.lastElapsedMs,
+    questName: state.questName,
+    flowBaseName: state.flowBaseName,
+    flowIndex: state.flowIndex
+  });
+
   if(state.status !== "running") return;
 
   const startTs = Number(state.startTs || 0);
@@ -7563,26 +7578,62 @@ function forceAutoStop(){
 
   const baseElapsed = Number(state.elapsedBefore || 0);
   const lockedElapsed = Math.max(0, baseElapsed + (finalTs - startTs));
+  const minutes = Math.max(0, Math.round(lockedElapsed / 60000));
+  const dateKey = state.startDateKey || localDateKey();
+
+  state.flowBaseName = state.flowBaseName || normQuestName(state.questName || "");
+
+  let reportMinutes = minutes;
+  let splitInfo = null;
+
+  if(minutes > 0){
+    splitInfo = buildPendingSegmentsFromStoppedFlow(minutes);
+    console.log("[FORCE AUTOSTOP AFTER HELPER]", {
+      splitInfo,
+      questName: state.questName,
+      flowBaseName: state.flowBaseName,
+      flowIndex: state.flowIndex,
+      pendingSegments: state.pendingSegments
+    });
+  }
 
   state.status = "stopped";
   state.startTs = null;
-  state.elapsedBefore = lockedElapsed;
-  state.lastElapsedMs = lockedElapsed;
+
+  if(splitInfo){
+    state.elapsedBefore = splitInfo.currentMinutes * 60000;
+    state.lastElapsedMs = splitInfo.currentMinutes * 60000;
+    reportMinutes = splitInfo.currentMinutes;
+
+    console.log("[FORCE AUTOSTOP splitInfo]", splitInfo);
+    console.log("[FORCE AUTOSTOP state after split]", {
+      questName: state.questName,
+      flowBaseName: state.flowBaseName,
+      flowIndex: state.flowIndex,
+      pendingSegments: state.pendingSegments,
+      reportMinutes
+    });
+  }else{
+    state.elapsedBefore = lockedElapsed;
+    state.lastElapsedMs = lockedElapsed;
+  }
 
   clearCutDeadline();
+  questFinished = true;
   saveState();
 
-  questFinished = true;
+  if(el.reportMinutes) el.reportMinutes.value = String(reportMinutes);
+  applyBonusRule(reportMinutes);
 
-  const minutes = Math.max(0, Math.round(lockedElapsed / 60000));
-  if(el.reportMinutes) el.reportMinutes.value = String(minutes);
-  applyBonusRule(minutes);
-
-  const dateKey = state.startDateKey || localDateKey();
   updateCapHint(dateKey, state.questName);
 
   clearSubmitMessages();
   setReportVisible(true);
+
+  setMethodChangeOpen(false);
+  setClaimOpen(false);
+  refreshInsightHint();
+
   saveReportDraft();
   updateUI();
   scrollToId("sec-report");
@@ -7609,18 +7660,52 @@ function checkAutoStop(){
       state.softWarned = true;
       state.softDeadlineTs = targetTs + 10000;
       saveState();
+
+      console.log("[auto-stop][soft] warn phase start", {
+        now,
+        targetTs,
+        softDeadlineTs: state.softDeadlineTs,
+        questName: state.questName,
+        flowBaseName: state.flowBaseName,
+        flowIndex: state.flowIndex
+      });
+
       showTimerWarn(`ครบ ${state.cutMinutes} นาทีแล้ว — จะหยุดอัตโนมัติใน 10 วิ`);
       return;
     }
 
     if(state.targetEndTs && now >= state.targetEndTs){
-  if(willCurrentRunHitBaseCapNow()){
-    const didSplit = splitCurrentQuestSegmentAtCap();
-    if(didSplit) return;
-  }
+      console.log("[auto-stop][soft] target reached", {
+        now,
+        targetTs: state.targetEndTs,
+        questName: state.questName,
+        flowBaseName: state.flowBaseName,
+        flowIndex: state.flowIndex,
+        startDateKey: state.startDateKey,
+        lastElapsedMs: state.lastElapsedMs,
+        elapsedBefore: state.elapsedBefore
+      });
 
-  forceAutoStop();
-}
+      const capCheckTs = Number(
+  (state.softWarned && state.softDeadlineTs) ? state.softDeadlineTs : state.targetEndTs
+);
+
+const hitCap = willCurrentRunHitBaseCapNow(capCheckTs);
+console.log("[auto-stop][soft] hitCap?", hitCap, { capCheckTs });
+
+      if(hitCap){
+        const didSplit = splitCurrentQuestSegmentAtCap();
+        console.log("[auto-stop][soft] didSplit?", didSplit, {
+          questNameAfter: state.questName,
+          flowIndexAfter: state.flowIndex,
+          pendingSegments: state.pendingSegments
+        });
+        if(didSplit) return;
+      }
+
+      console.log("[auto-stop][soft] fallback -> forceAutoStop()");
+      forceAutoStop();
+    }
 
     return;
   }
@@ -7629,28 +7714,79 @@ function checkAutoStop(){
   if(!targetTs) return;
 
   if(now >= targetTs){
-  if(willCurrentRunHitBaseCapNow()){
-    const didSplit = splitCurrentQuestSegmentAtCap();
-    if(didSplit) return;
+    console.log("[auto-stop][hard] target reached", {
+      now,
+      targetTs,
+      questName: state.questName,
+      flowBaseName: state.flowBaseName,
+      flowIndex: state.flowIndex,
+      startDateKey: state.startDateKey,
+      lastElapsedMs: state.lastElapsedMs,
+      elapsedBefore: state.elapsedBefore
+    });
+
+    const hitCap = willCurrentRunHitBaseCapNow(targetTs);
+console.log("[auto-stop][hard] hitCap?", hitCap, { capCheckTs: targetTs });
+
+    if(hitCap){
+      const didSplit = splitCurrentQuestSegmentAtCap();
+      console.log("[auto-stop][hard] didSplit?", didSplit, {
+        questNameAfter: state.questName,
+        flowIndexAfter: state.flowIndex,
+        pendingSegments: state.pendingSegments
+      });
+      if(didSplit) return;
+    }
+
+    console.log("[auto-stop][hard] fallback -> forceAutoStop()");
+    forceAutoStop();
   }
-
-  forceAutoStop();
-}
 }
 
-function willCurrentRunHitBaseCapNow(){
-  const qn = normQuestName(state.questName || "");
+function willCurrentRunHitBaseCapNow(atTs = null){
+  const qn = normQuestName(state.flowBaseName || state.questName || "");
   if(!qn) return false;
 
   const dateKey = state.startDateKey || localDateKey();
   const usedBefore = calcQuestBaseMinutesUsed(dateKey, qn);
 
-  const elapsedMinNow = Math.max(
-    0,
-    Math.round(((state.status === "paused") ? state.elapsedBefore : computeElapsedMs()) / 60000)
-  );
+  let elapsedMsNow = 0;
 
-  return (usedBefore + elapsedMinNow) >= Number(RULES.baseCapPerQuestNamePerDay || 60);
+  if(Number.isFinite(atTs) && atTs > 0 && state.startTs){
+    elapsedMsNow = Math.max(
+      0,
+      Number(state.elapsedBefore || 0) + (Number(atTs) - Number(state.startTs || 0))
+    );
+  }else{
+    elapsedMsNow = Math.max(
+      0,
+      (state.status === "paused")
+        ? Number(state.elapsedBefore || 0)
+        : computeElapsedMs()
+    );
+  }
+
+  const elapsedMinNow = Math.max(0, Math.floor(elapsedMsNow / 60000));
+  const cap = Number(RULES.baseCapPerQuestNamePerDay || 60);
+  const result = (usedBefore + elapsedMinNow) >= cap;
+
+  console.log("[cap-check]", {
+    qn,
+    dateKey,
+    usedBefore,
+    elapsedMsNow,
+    elapsedMinNow,
+    cap,
+    result,
+    questName: state.questName,
+    flowBaseName: state.flowBaseName,
+    flowIndex: state.flowIndex,
+    startTs: state.startTs,
+    elapsedBefore: state.elapsedBefore,
+    atTs
+  });
+
+  return result;
 }
 
   function renderTimer(){
@@ -7783,7 +7919,7 @@ function extendCurrentQuestBy(extraMinutes){
     const remainMsAfter = Math.max(0, (state.targetEndTs || 0) - Date.now());
   const remainMinAfter = Math.ceil(remainMsAfter / 60000);
 
-  if(willReachBaseCap){
+  if(willCurrentRunHitBaseCapNow()){
     showTimerWarn(`เพิ่มเวลา +${addMin} นาทีแล้ว • เหลือประมาณ ${remainMinAfter} นาที • แต่ base ของ "${normQuestName(state.questName)}" วันนี้อาจตันที่ ${RULES.baseCapPerQuestNamePerDay} นาที`);
   }else{
     showTimerWarn(`เพิ่มเวลา +${addMin} นาทีแล้ว • เหลือประมาณ ${remainMinAfter} นาที`);
@@ -9132,6 +9268,21 @@ if(
 }
 
 function splitCurrentQuestSegmentAtCap(){
+
+    console.log("[split] enter", {
+    questName: state.questName,
+    flowBaseName: state.flowBaseName,
+    flowIndex: state.flowIndex,
+    flowChainId: state.flowChainId,
+    startDateKey: state.startDateKey,
+    pendingSegments: state.pendingSegments,
+    cutEnabled: state.cutEnabled,
+    cutMinutes: state.cutMinutes,
+    targetEndTs: state.targetEndTs,
+    lastElapsedMs: state.lastElapsedMs,
+    elapsedBefore: state.elapsedBefore,
+    status: state.status
+  });
   ensureFlowMetaForCurrentQuest();
 
   const currentName = normQuestName(state.questName || "");
@@ -9177,6 +9328,63 @@ function splitCurrentQuestSegmentAtCap(){
 
   showTimerWarn(`ครบ ${capMin} นาทีแล้ว • แยกเป็น "${nextName}" อัตโนมัติ`);
   return true;
+}
+
+function buildPendingSegmentsFromStoppedFlow(totalMinutes){
+  ensureFlowMetaForCurrentQuest();
+
+  const baseName = normQuestName(state.flowBaseName || state.questName || "");
+  if(!baseName) return null;
+
+  const capMin = Number(RULES.baseCapPerQuestNamePerDay || 60);
+  if(!Number.isFinite(capMin) || capMin <= 0) return null;
+
+  const wholeMinutes = Math.max(0, Number(totalMinutes || 0));
+  if(wholeMinutes <= 0) return null;
+
+  const fullSegments = Math.floor(wholeMinutes / capMin);
+  const remainder = wholeMinutes % capMin;
+
+  if(fullSegments <= 0) return null;
+
+  const built = [];
+
+  for(let i = 0; i < fullSegments; i++){
+    built.push({
+      chainId: state.flowChainId,
+      flowBaseName: baseName,
+      index: i + 1,
+      questName: buildFlowQuestName(baseName, i + 1),
+      minutes: capMin,
+      createdAt: Date.now() + i
+    });
+  }
+
+  const nextIndex = fullSegments + 1;
+  const currentName = buildFlowQuestName(baseName, nextIndex);
+
+  state.flowBaseName = baseName;
+  state.flowIndex = nextIndex;
+  state.questName = currentName;
+  state.pendingSegments = built;
+
+  if(el.questName) el.questName.value = state.questName || "";
+
+  console.log("[buildStoppedFlow] after mutate", {
+  questName: state.questName,
+  flowBaseName: state.flowBaseName,
+  flowIndex: state.flowIndex,
+  pendingSegments: state.pendingSegments,
+  currentName,
+  nextIndex,
+  remainder
+});
+
+  return {
+    pendingSegments: built,
+    currentQuestName: currentName,
+    currentMinutes: remainder
+  };
 }
 
 function currentQuestReachedDailyBaseCap(){
@@ -9230,6 +9438,17 @@ function pauseQuest(){
 }
 
   function stopQuest(){
+
+    console.log("[STOPQUEST ENTER]", {
+  status: state.status,
+  startTs: state.startTs,
+  elapsedBefore: state.elapsedBefore,
+  questName: state.questName,
+  flowBaseName: state.flowBaseName,
+  flowIndex: state.flowIndex,
+  pendingSegments: state.pendingSegments
+});
+
   if(!(state.status==="running" || state.status==="paused")) return;
 
  if(!isCurrentTabMasterNow()){
@@ -9240,25 +9459,67 @@ function pauseQuest(){
   const now = Date.now();
   const elapsed = (state.status==="running") ? computeElapsedMs(now) : state.elapsedBefore;
 
-  state.status = "stopped";
+  const minutes = Math.max(0, Math.round(elapsed / 60000));
+const dateKey = state.startDateKey || localDateKey();
+
+state.flowBaseName = state.flowBaseName || normQuestName(state.questName || "");
+
+let reportMinutes = minutes;
+let splitInfo = null;
+
+if(minutes > 0){
+  console.log("[STOPQUEST BEFORE HELPER]", {
+    minutes,
+    cap: RULES.baseCapPerQuestNamePerDay,
+    questName: state.questName,
+    flowBaseName: state.flowBaseName,
+    flowIndex: state.flowIndex
+  });
+
+  splitInfo = buildPendingSegmentsFromStoppedFlow(minutes);
+
+  console.log("[STOPQUEST AFTER HELPER]", {
+    splitInfo,
+    questName: state.questName,
+    flowBaseName: state.flowBaseName,
+    flowIndex: state.flowIndex,
+    pendingSegments: state.pendingSegments
+  });
+}
+
+state.status = "stopped";
 state.startTs = null;
-state.elapsedBefore = elapsed;
-state.lastElapsedMs = elapsed;
+
+if(splitInfo){
+  state.elapsedBefore = splitInfo.currentMinutes * 60000;
+  state.lastElapsedMs = splitInfo.currentMinutes * 60000;
+  reportMinutes = splitInfo.currentMinutes;
+
+  console.log("[manual-stop] splitInfo", splitInfo);
+
+  console.log("[manual-stop] state after split", {
+  questName: state.questName,
+  flowBaseName: state.flowBaseName,
+  flowIndex: state.flowIndex,
+  pendingSegments: state.pendingSegments,
+  reportMinutes
+});
+}else{
+  state.elapsedBefore = elapsed;
+  state.lastElapsedMs = elapsed;
+}
+
+
 
 clearCutDeadline();
-
-  // stop จริง = จบ flow นี้
-  state.flowBaseName = state.flowBaseName || normQuestName(state.questName || "");
 
 questFinished = true;
 saveState();
 
-  const minutes = Math.max(0, Math.round(elapsed/60000));
-  if(el.reportMinutes) el.reportMinutes.value = String(minutes);
-  applyBonusRule(minutes);
+if(el.reportMinutes) el.reportMinutes.value = String(reportMinutes);
+applyBonusRule(reportMinutes);
 
-  const dateKey = state.startDateKey || localDateKey();
-  updateCapHint(dateKey, state.questName);
+updateCapHint(dateKey, state.questName);
 
   clearSubmitMessages();
   setReportVisible(true);
@@ -9345,10 +9606,19 @@ const segmentsToSave = [
   }
 ];
 
+console.log("[submit] segmentsToSave =", JSON.parse(JSON.stringify(segmentsToSave)));
+console.log("[submit] state before save", {
+  questName: state.questName,
+  flowBaseName: state.flowBaseName,
+  flowIndex: state.flowIndex,
+  pendingSegments: state.pendingSegments,
+  lastElapsedMs: state.lastElapsedMs
+});
+
 let baseMinutesUsed = 0;
 
 for(const seg of segmentsToSave){
-  const segName = normQuestName(seg.questName || "");
+  const segName = (seg.questName || "").trim();
   if(!segName) continue;
 
   const used = calcQuestBaseMinutesUsed(dateKey, segName);
@@ -9393,40 +9663,67 @@ const questScore = baseScore + bonus;
 
     pushUndoSnapshot();
 
-    const entry = {
-      insightWhy: (el.insightWhy?.value || "").trim(),
-insightFrom: (el.insightFrom?.value || "").trim(),
-insightTo: (el.insightTo?.value || "").trim(),
-
-claimKey: generatedClaimKey || "",
-claimSourceKey: (el.claimKeyInput?.value || "").trim().toUpperCase(),
-claimProof: (el.claimProof?.value || "").trim(),
-claimResolved: false,
-      ts: Date.now(),
-      dateKey,
-      category: state.selectedCategory,
-      questName: qn,
-      minutesSpent: minutes,
-      baseMinutesUsed,
-      baseScore: round1(baseScore),
-      qualityBonus: bonus,
-      questScore: round1(questScore),
-      notes: (() => {
-        const extra = gateConsumeReasonIfAny();
-        const base = (el.notes?.value || "").trim();
-        if(extra && base) return `${extra}\n${base}`;
-        if(extra) return extra;
-        return base;
-      })()
-      
-    };
-    
-
-    const all = loadAll();
+const all = loadAll();
 const day = ensureDay(all.days, dateKey);
-    day.quests.push(entry);
+
+const gateExtraNote = gateConsumeReasonIfAny();
+const baseNote = (el.notes?.value || "").trim();
+const mergedNote = (() => {
+  if(gateExtraNote && baseNote) return `${gateExtraNote}\n${baseNote}`;
+  if(gateExtraNote) return gateExtraNote;
+  return baseNote;
+})();
+
+let totalSavedScore = 0;
+let totalSavedBaseMinutes = 0;
+
+for(let i = 0; i < segmentsToSave.length; i++){
+  const seg = segmentsToSave[i];
+  const segName = (seg.questName || "").trim();
+  if(!segName) continue;
+
+  const used = calcQuestBaseMinutesUsed(dateKey, segName);
+  const remaining = Math.max(0, RULES.baseCapPerQuestNamePerDay - used);
+  const segMinutes = Math.max(0, Number(seg.minutes || 0));
+  const segBaseMinutes = Math.min(segMinutes, remaining);
+  const segBaseScore = round1(segBaseMinutes * RULES.basePerMinute);
+
+  const isLastSegment = i === segmentsToSave.length - 1;
+  const segQualityBonus = isLastSegment ? bonus : 0;
+  const segQuestScore = round1(segBaseScore + segQualityBonus);
+
+  const segEntry = {
+    insightWhy: isLastSegment ? (el.insightWhy?.value || "").trim() : "",
+    insightFrom: isLastSegment ? (el.insightFrom?.value || "").trim() : "",
+    insightTo: isLastSegment ? (el.insightTo?.value || "").trim() : "",
+
+    claimKey: isLastSegment ? (generatedClaimKey || "") : "",
+    claimSourceKey: isLastSegment ? (el.claimKeyInput?.value || "").trim().toUpperCase() : "",
+    claimProof: isLastSegment ? (el.claimProof?.value || "").trim() : "",
+    claimResolved: false,
+
+    ts: Number(seg.createdAt || Date.now()),
+    dateKey,
+    category: state.selectedCategory,
+    questName: segName,
+    minutesSpent: segMinutes,
+    baseMinutesUsed: segBaseMinutes,
+    baseScore: segBaseScore,
+    qualityBonus: segQualityBonus,
+    questScore: segQuestScore,
+    notes: isLastSegment ? mergedNote : ""
+  };
+
+console.log("[submit] push segEntry", segEntry);
+
+  day.quests.push(segEntry);
+  rememberQuestName(segName);
+
+  totalSavedScore += segQuestScore;
+  totalSavedBaseMinutes += segBaseMinutes;
+}
+
 recalcDayTotal(day);
-rememberQuestName(qn);
 saveAll(all);
 
   state.pendingSegments = [];
@@ -9436,7 +9733,7 @@ state.flowChainId = null;
 
 // ===== Morning Gate result resolve =====
 if(isGateActiveToday() && gate.awaitingGateResult){
-  const minutesSpent = Number(entry.minutesSpent || 0);
+  const minutesSpent = Number(totalSavedBaseMinutes || 0);
   const passedGate = !!gate.startedInTime && minutesSpent >= GATE_RULES.qualifyMin;
 
   if(passedGate){
@@ -9479,11 +9776,12 @@ clearReportFormFields();
     updateStreakAfterChange();
 
     if(el.submitOk){
-      el.submitOk.style.display="block";
-      const capMsg = (baseMinutesUsed < minutes) ? ` (cap: counted ${baseMinutesUsed}/${minutes} min)` : "";
-      el.submitOk.textContent = `Saved! +${round1(questScore).toFixed(1)}${capMsg}`;
-    }
-
+  el.submitOk.style.display = "block";
+  const capMsg = (totalSavedBaseMinutes < minutes)
+    ? ` (cap: counted ${totalSavedBaseMinutes}/${minutes} min)`
+    : "";
+  el.submitOk.textContent = `Saved! +${round1(totalSavedScore).toFixed(1)}${capMsg}`;
+}
     if(generatedClaimKey && el.submitOk){
   el.submitOk.style.display = "block";
   el.submitOk.textContent = `Saved! Claim Key: ${generatedClaimKey}`;
@@ -10233,7 +10531,16 @@ function clearReportFormFields(){
   on(el.homeUserName, "click", editProfileName);
   on(el.homeUserSub, "click", editProfileName);
   on(el.resumeBtn, "click", resumeQuest);
-  on(el.stopBtn, "click", stopQuest);
+  on(el.stopBtn, "click", (e)=>{
+  console.log("[STOP BTN CLICK WRAPPER]", {
+    status: state.status,
+    disabled: !!el.stopBtn?.disabled,
+    targetEndTs: state.targetEndTs,
+    cutEnabled: state.cutEnabled,
+    cutMinutes: state.cutMinutes
+  });
+  stopQuest(e);
+});
  
   // report
   on(el.reportMinutes, "input", ()=>{
