@@ -11195,7 +11195,7 @@ async function ensureSWReady(){
   if(!("serviceWorker" in navigator)) return null;
 
   try{
-    const reg = await navigator.serviceWorker.register("./sw.js", { scope: "./" });
+    const reg = await navigator.serviceWorker.register("/sw.js");
 
     if(reg.waiting){
       reg.waiting.postMessage({ type: "SKIP_WAITING" });
@@ -11327,7 +11327,7 @@ async function registerSW(){
   }
 
   try{
-    const reg = await navigator.serviceWorker.register("./sw.js", { scope: "./" });
+    const reg = await navigator.serviceWorker.register("/sw.js");
     console.log("[PWA] SW registered", reg.scope);
 
     if (reg.waiting) {
@@ -12815,9 +12815,6 @@ window.checkAuthGate = function(){
     gate.setAttribute("aria-hidden", "false");
   }
 };
-window.addEventListener("load", () => {
-  checkAuthGate();
-});
 function requireAuth(){
   if(!window.sqAuth?.uid){
     alert("Please login first");

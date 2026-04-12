@@ -1,11 +1,9 @@
 const CACHE_NAME = "sakuraq-v0-11-4";
 
 const APP_SHELL = [
-  "./",
-  "./index.html",
-  "./manifest.webmanifest",
-  "./logo-192.png",
-  "./logo-512.png"
+  "/index.html",
+  "/manifest.webmanifest",
+  "/logo-192.png"
 ];
 
 self.addEventListener("install", (event) => {
@@ -14,9 +12,6 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
       await cache.addAll(APP_SHELL);
-
-      const res = await fetch("./index.html");
-      await cache.put("./index.html", res.clone());
     })
   );
 });
@@ -56,11 +51,11 @@ self.addEventListener("fetch", (event) => {
         .then((res) => {
           const clone = res.clone();
           caches.open(CACHE_NAME).then((cache) => {
-            cache.put("./index.html", clone).catch(() => {});
+            cache.put("/index.html", clone).catch(() => {});
           });
           return res;
         })
-        .catch(() => caches.match("./index.html"))
+        .catch(() => caches.match("/index.html"))
     );
     return;
   }
@@ -97,7 +92,7 @@ self.addEventListener("notificationclick", (event) => {
       }
 
       if (clients.openWindow) {
-        return clients.openWindow("./index.html");
+        return clients.openWindow("/index.html");
       }
 
       return Promise.resolve();
