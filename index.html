@@ -7064,22 +7064,25 @@ saveAll(all);
     if(el.gateLimitDisplay) el.gateLimitDisplay.textContent = `${GATE_RULES.limitMin}m`;
     if(el.gateQualifyDisplay) el.gateQualifyDisplay.textContent = `${GATE_RULES.qualifyMin}m`;
   }
-  async function sendMorningGateNotification(){
+async function sendMorningGateNotification(){
   if(!("Notification" in window)) return false;
   if(Notification.permission !== "granted") return false;
-  if(!("serviceWorker" in navigator)) return false;
 
   // ถ้า user กำลังเปิดหน้าแอปอยู่แล้ว ไม่ต้องยิง notification ซ้ำ
   if(document.visibilityState === "visible") return false;
 
   try{
-    const reg = await navigator.serviceWorker.ready;
+    const reg = await ensureSWReady();
+    if(!reg) return false;
 
     await reg.showNotification("🚨 Morning Gate", {
       body: `ถึงเวลา ${gateCfg.triggerHHMM} แล้ว • เริ่มเควสแรกให้ทัน ${GATE_RULES.qualifyMin} นาที`,
       icon: "./logo-192.png",
+      badge: "./logo-192.png",
       tag: "sakuraq-morning-gate",
-      renotify: false,
+      renotify: true,
+      requireInteraction: true,
+      vibrate: [300, 120, 300, 120, 300],
       data: {
         type: "morning-gate",
         triggerHHMM: gateCfg.triggerHHMM,
@@ -7089,7 +7092,7 @@ saveAll(all);
 
     return true;
   }catch(err){
-    console.error("Morning Gate notification error:", err);
+    console.error("[NOTI] morning gate send error:", err);
     return false;
   }
 }
@@ -9163,6 +9166,11 @@ if(!isCurrentTabMasterNow()){
   }
 
   async function startQuest(){
+
+    ensureNotificationPermission().then((perm)=>{
+  console.log("[NOTI] permission =", perm);
+});
+
   if(state.status !== "idle") return;
 
   const okMaster = acquireMasterTab();
@@ -9175,9 +9183,6 @@ if(!isCurrentTabMasterNow()){
 rememberQuestName(state.questName)
 
   const perm = await ensureNotificationPermission();
-  console.log("Notification permission:", perm);
-
-
   console.log("Notification permission:", perm);
 
   if(!gateCanStartQuest()){
@@ -11172,17 +11177,35 @@ function canUseNotification(){
 }
 
 async function ensureNotificationPermission(){
-  if(!canUseNotification()) return "unsupported"
+  if(!("Notification" in window)) return "unsupported";
 
-  if(Notification.permission === "granted") return "granted"
-  if(Notification.permission === "denied") return "denied"
+  if(Notification.permission === "granted") return "granted";
+  if(Notification.permission === "denied") return "denied";
 
   try{
-    const result = await Notification.requestPermission()
-    return result
+    const result = await Notification.requestPermission();
+    return result;
   }catch(err){
-    console.error("Notification permission error:", err)
-    return "error"
+    console.error("[NOTI] permission error:", err);
+    return "error";
+  }
+}
+
+async function ensureSWReady(){
+  if(!("serviceWorker" in navigator)) return null;
+
+  try{
+    const reg = await navigator.serviceWorker.register("./sw.js", { scope: "./" });
+
+    if(reg.waiting){
+      reg.waiting.postMessage({ type: "SKIP_WAITING" });
+    }
+
+    const readyReg = await navigator.serviceWorker.ready;
+    return readyReg || reg || null;
+  }catch(err){
+    console.error("[NOTI] ensureSWReady error:", err);
+    return null;
   }
 }
 
@@ -11225,53 +11248,71 @@ function shouldUseSystemNotification(){
 }
 
 async function sendQuestDoneNotification(questSnapshot){
-  if(notified) return;
-  if(!shouldUseSystemNotification()) return;
-  if(!("serviceWorker" in navigator)) return;
+  if(notified) return false;
+  if(!shouldUseSystemNotification()) return false;
 
   try{
-    const reg = await navigator.serviceWorker.ready;
+    const reg = await ensureSWReady();
+    if(!reg) return false;
 
     await reg.showNotification(buildNotificationTitle(questSnapshot), {
       body: buildNotificationBody(questSnapshot),
       icon: "./logo-192.png",
+      badge: "./logo-192.png",
       tag: "sakuraq-quest-done",
-      renotify: false
+      renotify: true,
+      requireInteraction: true,
+      vibrate: [200, 100, 200],
+      data: {
+        type: "quest-done",
+        questName: questSnapshot?.name || "",
+        category: questSnapshot?.category || "",
+        dateKey: localDateKey()
+      }
     });
 
-    playQuestDoneSound();
     notified = true;
+    return true;
   }catch(err){
-    console.error("SW notification send error:", err);
+    console.error("[NOTI] quest done send error:", err);
+    return false;
   }
 }
 
-function sendSmartWarningNotification(){
-  if(notificationMode !== "smart") return
-  if(smartWarnSent) return
-  if(!activeQuest) return
-  if(document.visibilityState === "visible") return
-  if(!("Notification" in window)) return
-  if(Notification.permission !== "granted") return
+async function sendSmartWarningNotification(){
+  if(notificationMode !== "smart") return false;
+  if(smartWarnSent) return false;
+  if(!activeQuest) return false;
+  if(document.visibilityState === "visible") return false;
+  if(!("Notification" in window)) return false;
+  if(Notification.permission !== "granted") return false;
 
   try{
-    const emoji = getQuestCategoryEmoji(activeQuest.category)
+    const reg = await ensureSWReady();
+    if(!reg) return false;
 
-    const n = new Notification(`${emoji} ${activeQuest.name || "Quest"}`, {
+    const emoji = getQuestCategoryEmoji(activeQuest.category);
+
+    await reg.showNotification(`${emoji} ${activeQuest.name || "Quest"}`, {
       body: "เหลืออีก 1 นาที",
       icon: "./logo-192.png",
+      badge: "./logo-192.png",
       tag: "sakuraq-quest-smart-warning",
-      renotify: false
-    })
+      renotify: true,
+      vibrate: [140, 80, 140],
+      data: {
+        type: "smart-warning",
+        questName: activeQuest.name || "",
+        category: activeQuest.category || "",
+        dateKey: localDateKey()
+      }
+    });
 
-    smartWarnSent = true
-
-    n.onclick = () => {
-      window.focus()
-      n.close()
-    }
+    smartWarnSent = true;
+    return true;
   }catch(err){
-    console.error("Smart warning notification error:", err)
+    console.error("[NOTI] smart warning error:", err);
+    return false;
   }
 }
 
@@ -12922,6 +12963,22 @@ async function finishBootOverlay(){
   el.extend5Btn?.addEventListener("click", ()=> extendCurrentQuestBy(5));
 el.extend10Btn?.addEventListener("click", ()=> extendCurrentQuestBy(10));
 }
+
+window.addEventListener("load", async () => {
+  console.log("[BOOT] Notification supported =", "Notification" in window);
+  console.log("[BOOT] Notification permission =", ("Notification" in window ? Notification.permission : "unsupported"));
+
+  if("serviceWorker" in navigator){
+    try{
+      const reg = await navigator.serviceWorker.ready;
+      console.log("[BOOT] SW ready =", !!reg, reg?.scope);
+    }catch(err){
+      console.error("[BOOT] SW ready failed:", err);
+    }
+  }
+});
+
+
   boot();
 
 
