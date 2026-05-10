@@ -2197,10 +2197,10 @@ background-size: 200% 100%;
 
 .foxMascot{
   position:absolute;
-  width:clamp(460px, 98vw, 620px);
+  width:clamp(480px, 98vw, 620px);
 
   left:58%;
-  bottom:155px;
+  bottom:100px;
 
   transform:translateX(-50%);
   z-index:20;
@@ -5258,16 +5258,25 @@ body.in-app-browser #authGate{
 
 .homeSpeechCard::after{
   content:"";
+
   position:absolute;
-  left:34px;
-  bottom:-13px;
-  width:24px;
-  height:24px;
-  background:rgba(255,255,255,.82);
-  border-left:1px solid rgba(255,255,255,.82);
-  border-bottom:1px solid rgba(255,255,255,.82);
-  transform:rotate(45deg);
-  border-radius:0 0 6px 0;
+
+  left:22px;
+  bottom:-10px;
+
+  width:22px;
+  height:22px;
+
+  background:rgba(255,255,255,.96);
+
+  border-radius:7px;
+
+  transform: rotate(45deg);
+
+  box-shadow:
+    2px 2px 10px rgba(15,23,42,.04);
+
+  z-index:-1;
 }
 
 .homeSpeechAvatar{
@@ -5477,6 +5486,50 @@ body.in-app-browser #authGate{
     16px 0 0 #18264d,
     8px 8px 0 2px #18264d;
 }
+.homeNameBtn{
+  padding:0;
+  margin:0;
+  border:0;
+  background:transparent;
+  color:#1d4ed8;
+  font:inherit;
+  font-weight:950;
+  box-shadow:none;
+  cursor:pointer;
+}
+
+.homeNameBtn:active{
+  transform:none !important;
+  box-shadow:none !important;
+}
+.homeAppLogo{
+  width:55px;
+  height: 55px;
+  border-radius:10px;
+  object-fit:cover;
+  display:block;
+}
+
+.homeHeroPanel{
+  top: 34px !important;
+  gap: 14px !important;
+}
+
+.homeSpeechCard{
+  margin-bottom: 10 !important;
+}
+
+.homeProgressCard{
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.homeStartQuestBtn{
+  margin-top: 0 !important;
+}
+.homeHeroPanel{
+  top: 46px !important;
+}
 </style>
 </head>
 <body>
@@ -5517,24 +5570,22 @@ body.in-app-browser #authGate{
         <div class="homeHeroPanel">
   <div class="homeSpeechCard">
     <div class="homeSpeechAvatar">
-      <div class="cssDogIcon"></div>
-    </div>
+  <img class="homeAppLogo" src="./logo-192.png" alt="SakuraQ logo">
+</div>
 
     <div class="homeSpeechText">
-      <div class="homeGreeting">สวัสดีนะ </div>
-      <div class="homeSubMessage">วันนี้เริ่มไป <b>26.4</b> แล้วนะ <span class="pawMini"></span></div>
-    </div>
+<div class="homeGreeting">
+  สวัสดีนะ <button id="homeNameBtn" class="homeNameBtn" type="button">เพื่อน</button>
+</div><div class="homeSubMessage">วันนี้เริ่มไป <b id="homeSpeechScore">0</b> แล้วนะ <span class="pawMini"></span></div>    </div>
   </div>
 
   <div class="homeProgressCard">
     <div class="homeProgressTop">
       <div><span id="homeProgressBig">26.4</span><span class="homeProgressMax"> / 100</span></div>
-      <div class="homeProgressGain">+14 วันนี้ ›</div>
-    </div>
+<div class="homeProgressGain" id="homeProgressGain">+0 วันนี้ ›</div>    </div>
 
     <div class="homeProgressTrack">
-      <div class="homeProgressFill" style="width:26.4%"></div>
-    </div>
+<div class="homeProgressFill" id="homeProgressFill"></div>    </div>
   </div>
 
   <button id="homeStartQuestBtn" class="homeStartQuestBtn" type="button">
@@ -7335,6 +7386,54 @@ const day = all.days?.[dateKey];
       : (day.quests||[]).reduce((s,q)=> s + (Number(q.questScore)||0), 0)
     );
   }
+
+  function renderHomeProgress(){
+  const today = localDateKey();
+  const score = Number(calcDayTotal(today)) || 0;
+  const percent = Math.max(0, Math.min(100, score));
+
+  const scoreText = round1(score);
+
+  const big = document.getElementById("homeProgressBig");
+  const speech = document.getElementById("homeSpeechScore");
+  const gain = document.getElementById("homeProgressGain");
+  const fill = document.getElementById("homeProgressFill");
+
+  if(big) big.textContent = scoreText;
+  if(speech) speech.textContent = scoreText;
+  if(gain) gain.textContent = `+${scoreText} วันนี้ ›`;
+  if(fill) fill.style.width = `${percent}%`;
+}
+
+const HOME_USER_NAME_KEY = "sakuraq_home_user_name";
+
+function getHomeUserName(){
+  return localStorage.getItem(HOME_USER_NAME_KEY) || "เพื่อน";
+}
+
+function setHomeUserName(name){
+  const clean = String(name || "").trim().slice(0, 18);
+  if(!clean) return;
+  localStorage.setItem(HOME_USER_NAME_KEY, clean);
+  renderHomeName();
+}
+
+function renderHomeName(){
+  const btn = document.getElementById("homeNameBtn");
+  if(btn) btn.textContent = getHomeUserName();
+}
+
+function setupHomeNameEdit(){
+  const btn = document.getElementById("homeNameBtn");
+  if(!btn) return;
+
+  btn.addEventListener("click", ()=>{
+    const next = prompt("อยากให้ SakuraQ เรียกชื่อว่าอะไร?", getHomeUserName());
+    if(next === null) return;
+    setHomeUserName(next);
+  });
+}
+
   function calcQuestBaseMinutesUsed(dateKey, questName){
     const all = loadAll();
 const day = all.days?.[dateKey];
@@ -9487,6 +9586,8 @@ const day = all.days?.[todayKey] || { totalQps:0, quests:[] };
   renderGatePageUI();
   renderTopMenuUI();
   renderHomeHud();
+  renderHomeProgress();
+  renderHomeName();
   
 
   if(state.status === "stopped"){
@@ -14916,6 +15017,10 @@ async function finishBootOverlay(){
 
   setBootStage("Finalizing...", 94);
   updateUI();
+
+  setupHomeNameEdit();
+renderHomeName();
+
   startTick();
 
   await finishBootOverlay();
