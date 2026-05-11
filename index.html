@@ -5748,9 +5748,13 @@ body.in-app-browser #authGate{
 .roomDesk,.roomShelf,.roomParticles,.roomFloor{ z-index:1 !important; }
 .foxMascot{ z-index:20 !important; }
 
+.roomScene {
+  background: url('./room-light.png') center center / cover no-repeat !important;
+}
+
 .roomWall,
-.roomBack{
-  background:#ffffff !important;
+.roomBack {
+  background: transparent !important;
 }
 
 .roomWall::before,
@@ -5795,7 +5799,6 @@ body.in-app-browser #authGate{
 }
 
 
-
 </style>
 </head>
 <body>
@@ -5806,6 +5809,8 @@ body.in-app-browser #authGate{
       <img class="bootLogo" src="./logo-192.png" alt="SakuraQ logo">
     </div>
 
+
+
     <h1 class="bootTitle">SakuraQ</h1>
     <p class="bootSub">Preparing your day</p>
 
@@ -5815,6 +5820,7 @@ body.in-app-browser #authGate{
       <span></span>
     </div>
 
+    
     <div class="bootBar" aria-hidden="true">
       <div id="bootBarFill" class="bootBarFill"></div>
     </div>
