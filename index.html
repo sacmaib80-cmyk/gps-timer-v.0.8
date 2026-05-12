@@ -5798,7 +5798,180 @@ body.in-app-browser #authGate{
     
 }
 
+/* ปุ่ม ไปต่อกันมั้ย — shimmer + readable text */
+#homeStartQuestBtn.homeStartQuestBtn{
+  position: relative;
+  overflow: hidden;
+  color: #ffffff !important;
+  text-shadow:
+    0 1px 3px rgba(0,0,0,.45),
+    0 0 12px rgba(0,0,0,.25) !important;
+  font-weight: 950 !important;
+  letter-spacing: .01em;
+}
 
+/* shimmer sweep */
+#homeStartQuestBtn.homeStartQuestBtn::before{
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    105deg,
+    transparent 20%,
+    rgba(255,255,255,.55) 50%,
+    transparent 80%
+  );
+  border-radius: inherit;
+  animation: btnShimmer 2.2s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ข้อความอยู่เหนือ shimmer */
+#homeStartQuestBtn.homeStartQuestBtn > *,
+#homeStartQuestBtn.homeStartQuestBtn > span{
+  position: relative;
+  z-index: 2;
+}
+
+@keyframes btnShimmer{
+  0%{
+    left: -75%;
+    opacity: 0;
+  }
+  15%{
+    opacity: 1;
+  }
+  60%{
+    left: 125%;
+    opacity: 1;
+  }
+  61%, 100%{
+    left: 125%;
+    opacity: 0;
+  }
+}
+
+/* ===== HQ CATEGORY CARDS v2 ===== */
+.hqCategoryList{
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.hqCatBtn{
+  width: 100%;
+  min-height: 68px;
+  border-radius: 20px;
+  border: none;
+  box-shadow: 0 2px 0 rgba(0,0,0,.07);
+  text-align: left;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+
+.hqCatBtn:active{
+  transform: scale(.975);
+  box-shadow: none;
+}
+
+/* icon */
+.hqCatIcon{
+  font-size: 32px;
+  line-height: 1;
+  flex: 0 0 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: rgba(255,255,255,.55);
+}
+
+/* text block */
+.hqCatText{
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.hqCatName{
+  font-size: 15px;
+  font-weight: 900;
+  color: #1a2e1a;
+  line-height: 1.1;
+}
+
+.hqCatDesc{
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  opacity: .72;
+  color: #1a2e1a;
+}
+
+/* arrow */
+.hqCatArrow{
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 900;
+  background: rgba(255,255,255,.60);
+  color: #1a2e1a;
+}
+
+/* per-category colors */
+.hqCatLearn{
+  background: linear-gradient(135deg, #d4f5e2, #b8efd0);
+}
+.hqCatLearn .hqCatArrow{
+  background: rgba(34,197,94,.22);
+  color: #166534;
+}
+
+.hqCatWork{
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+}
+.hqCatWork .hqCatArrow{
+  background: rgba(59,130,246,.20);
+  color: #1e40af;
+}
+
+.hqCatPhysical{
+  background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+}
+.hqCatPhysical .hqCatArrow{
+  background: rgba(139,92,246,.20);
+  color: #5b21b6;
+}
+
+.hqCatConnect{
+  background: linear-gradient(135deg, #fce7f3, #fbcfe8);
+}
+.hqCatConnect .hqCatArrow{
+  background: rgba(236,72,153,.20);
+  color: #9d174d;
+}
+
+/* title ขนาด */
+#hqStepCategory .hqTitle{
+  font-size: 26px;
+  line-height: 1.15;
+  margin-bottom: 4px;
+}
 </style>
 </head>
 <body>
@@ -6661,16 +6834,47 @@ body.in-app-browser #authGate{
     </button>
 
     <div id="hqStepCategory" class="hqStep show">
-      <div class="hqKicker">Start Quest</div>
-      <h2 class="hqTitle">Choose your category</h2>
+  <div class="hqKicker">Start Quest</div>
+  <h2 class="hqTitle">Choose your<br>category ✨</h2>
 
-      <div class="hqCategoryList">
-        <button class="hqCatBtn" type="button" data-category="Learning">Learn</button>
-        <button class="hqCatBtn" type="button" data-category="Work/Project">Work</button>
-        <button class="hqCatBtn" type="button" data-category="Physical">Physical</button>
-        <button class="hqCatBtn" type="button" data-category="Connection">Connect</button>
-      </div>
-    </div>
+  <div class="hqCategoryList">
+    <button class="hqCatBtn hqCatLearn" type="button" data-category="Learning">
+      <span class="hqCatIcon">📗</span>
+      <span class="hqCatText">
+        <span class="hqCatName">Learn</span>
+        <span class="hqCatDesc">เติมความรู้ทุกวัน ไปข้างหน้าอย่างมั่นใจ</span>
+      </span>
+      <span class="hqCatArrow">›</span>
+    </button>
+
+    <button class="hqCatBtn hqCatWork" type="button" data-category="Work/Project">
+      <span class="hqCatIcon">💼</span>
+      <span class="hqCatText">
+        <span class="hqCatName">Work</span>
+        <span class="hqCatDesc">จัดการงานให้สำเร็จ พัฒนาตัวเองไม่หยุด</span>
+      </span>
+      <span class="hqCatArrow">›</span>
+    </button>
+
+    <button class="hqCatBtn hqCatPhysical" type="button" data-category="Physical">
+      <span class="hqCatIcon">👟</span>
+      <span class="hqCatText">
+        <span class="hqCatName">Physical</span>
+        <span class="hqCatDesc">ดูแลร่างกายให้แข็งแรง พร้อมลุยไปทุกวัน</span>
+      </span>
+      <span class="hqCatArrow">›</span>
+    </button>
+
+    <button class="hqCatBtn hqCatConnect" type="button" data-category="Connection">
+      <span class="hqCatIcon">💗</span>
+      <span class="hqCatText">
+        <span class="hqCatName">Connect</span>
+        <span class="hqCatDesc">เชื่อมต่อความสัมพันธ์ที่ดี อยู่เคียงข้างกันเสมอ</span>
+      </span>
+      <span class="hqCatArrow">›</span>
+    </button>
+  </div>
+</div>
 
     <div id="hqStepSetup" class="hqStep">
       <div class="hqKicker">Quest Setup</div>
