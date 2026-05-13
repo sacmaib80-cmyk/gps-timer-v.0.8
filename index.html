@@ -6155,6 +6155,19 @@ body.in-app-browser #authGate{
     box-shadow: 0 8px 28px rgba(244,114,182,.40);
   }
 }
+
+* {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+input, textarea {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  user-select: text;
+}
 </style>
 </head>
 <body>
@@ -7357,6 +7370,11 @@ console.error = (...args) => {
   - Gate Page opens ONLY from top-right button #gateToggleBtn
   - Robust: missing HTML parts won't crash (null guards)
 ========================================================= */
+document.addEventListener("contextmenu", e => e.preventDefault());
+document.addEventListener("selectstart", e => e.preventDefault());
+document.addEventListener("dragstart", e => e.preventDefault());
+
+
 let activeQuest = null
 let questStartTime = null
 let questEndTime = null
