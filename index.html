@@ -8628,8 +8628,8 @@ function loadState(){
   const saved = all.state;
 
   if(saved && typeof saved === "object" && !Array.isArray(saved)){
-    Object.assign(state, saved);
-  }
+Object.assign(state, saved);
+    if(state.homeRunEndTs) window.homeRunEndTs = Number(state.homeRunEndTs);  }
 }
 function resetRuntimeForAccountSwitch(){
   if(tickHandle){
@@ -13028,6 +13028,14 @@ maybeSendMorningGateNotification();
 rqTickUI();
 renderGatePageUI();
 updateUI();
+
+  if((state.status === "running" || state.status === "paused") && window.homeRunEndTs){
+    const runScreen = document.getElementById("homeRunScreen");
+    if(runScreen && !runScreen.classList.contains("show")){
+      switchPage("homeScene");
+      showHomeRunScreen();
+    }
+  }
 });
 
 
@@ -13470,6 +13478,8 @@ if(!Number.isFinite(inputMin) || inputMin < 1){
 }
 
 window.homeRunEndTs = Date.now() + inputMin * 60000;
+  state.homeRunEndTs = window.homeRunEndTs;
+  saveState();
 
   setQuestCategory(homeQuestDraftCategory);
 
