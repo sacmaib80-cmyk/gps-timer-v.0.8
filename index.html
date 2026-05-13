@@ -5972,6 +5972,189 @@ body.in-app-browser #authGate{
   line-height: 1.15;
   margin-bottom: 4px;
 }
+
+/* ===== CSS ICONS ===== */
+
+.hqCatIcon{ overflow: visible; } /* กัน briefcase handle ถูกตัด */
+
+.sqIcon{
+  display: block;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+/* LEARN — Book */
+.sqIconLearn{
+  width: 22px;
+  height: 27px;
+  background: linear-gradient(160deg, #34d399, #059669);
+  border-radius: 2px 5px 5px 2px;
+}
+.sqIconLearn::before{  /* spine */
+  content:"";
+  position:absolute;
+  left:0; top:0; bottom:0;
+  width:5px;
+  background:#047857;
+  border-radius:2px 0 0 2px;
+}
+.sqIconLearn::after{   /* page lines */
+  content:"";
+  position:absolute;
+  left:9px; top:7px;
+  width:9px; height:2px;
+  background:rgba(255,255,255,.85);
+  border-radius:1px;
+  box-shadow: 0 5px 0 rgba(255,255,255,.85), 0 10px 0 rgba(255,255,255,.6);
+}
+
+/* WORK — Briefcase */
+.sqIconWork{
+  width:26px; height:18px;
+  margin-top:5px;
+  background:linear-gradient(160deg,#60a5fa,#2563eb);
+  border-radius:3px;
+}
+.sqIconWork::before{   /* handle */
+  content:"";
+  position:absolute;
+  left:50%; top:-7px;
+  transform:translateX(-50%);
+  width:12px; height:8px;
+  border:2.5px solid #1d4ed8;
+  border-bottom:none;
+  border-radius:6px 6px 0 0;
+}
+.sqIconWork::after{    /* divider line */
+  content:"";
+  position:absolute;
+  left:0; right:0; top:50%;
+  transform:translateY(-50%);
+  height:2px;
+  background:rgba(255,255,255,.4);
+}
+
+/* PHYSICAL — Dumbbell */
+.sqIconPhysical{
+  width:28px; height:8px;
+  background:linear-gradient(90deg,#a78bfa,#7c3aed);
+  border-radius:2px;
+}
+.sqIconPhysical::before,
+.sqIconPhysical::after{
+  content:"";
+  position:absolute;
+  top:50%; transform:translateY(-50%);
+  width:7px; height:18px;
+  background:linear-gradient(160deg,#a78bfa,#7c3aed);
+  border-radius:3px;
+}
+.sqIconPhysical::before{ left:-5px; }
+.sqIconPhysical::after{  right:-5px; }
+
+/* CONNECT — Heart */
+.sqIconConnect{
+  width: 18px;
+  height: 18px;
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin: auto;
+
+  transform: rotate(-45deg) translateY(1px);
+}
+
+.sqIconConnect::before{
+  content: "";
+  position: absolute;
+
+  width: 18px;
+  height: 18px;
+
+  background: linear-gradient(160deg, #f472b6, #db2777);
+
+  border-radius: 4px;
+
+  left: 0;
+  top: 0;
+
+  box-shadow:
+    0 2px 6px rgba(244,114,182,.18),
+    inset 0 1px 1px rgba(255,255,255,.22);
+}
+
+.sqIconConnect::after{
+  content: "";
+  position: absolute;
+
+  width: 18px;
+  height: 18px;
+
+  background: linear-gradient(160deg, #f472b6, #db2777);
+
+  border-radius: 50%;
+
+  left: 0;
+  top: -9px;
+
+  box-shadow:
+    9px 9px 0 #db2777;
+}
+
+/* ===== ANIMATIONS ===== */
+
+/* reset อนิเมชั่นเดิม */
+.hqCatBtn{
+  transition:
+    transform .22s cubic-bezier(.34,1.56,.64,1),
+    box-shadow .22s ease,
+    filter .22s ease;
+}
+.hqCatBtn:active{ transform: none; } /* ลบ scale เดิม */
+
+/* DESKTOP — hover: glow + slide right */
+@media (hover: hover){
+  .hqCatBtn:hover{
+    transform: translateX(6px);
+    filter: brightness(1.05);
+  }
+  .hqCatLearn:hover{
+    box-shadow: 0 8px 28px rgba(52,211,153,.40), 0 2px 0 rgba(0,0,0,.05);
+  }
+  .hqCatWork:hover{
+    box-shadow: 0 8px 28px rgba(96,165,250,.40), 0 2px 0 rgba(0,0,0,.05);
+  }
+  .hqCatPhysical:hover{
+    box-shadow: 0 8px 28px rgba(167,139,250,.40), 0 2px 0 rgba(0,0,0,.05);
+  }
+  .hqCatConnect:hover{
+    box-shadow: 0 8px 28px rgba(244,114,182,.40), 0 2px 0 rgba(0,0,0,.05);
+  }
+}
+
+/* MOBILE — long press: transition-delay ทำให้ effect เกิดเมื่อกดค้าง */
+@media (hover: none){
+  .hqCatBtn:active{
+    transition-delay: 0.35s; /* ต้องกดค้าง ~350ms ถึงเห็น */
+    transform: translateX(6px);
+    filter: brightness(1.05);
+  }
+  .hqCatLearn:active{
+    box-shadow: 0 8px 28px rgba(52,211,153,.40);
+  }
+  .hqCatWork:active{
+    box-shadow: 0 8px 28px rgba(96,165,250,.40);
+  }
+  .hqCatPhysical:active{
+    box-shadow: 0 8px 28px rgba(167,139,250,.40);
+  }
+  .hqCatConnect:active{
+    box-shadow: 0 8px 28px rgba(244,114,182,.40);
+  }
+}
 </style>
 </head>
 <body>
@@ -6839,7 +7022,8 @@ body.in-app-browser #authGate{
 
   <div class="hqCategoryList">
     <button class="hqCatBtn hqCatLearn" type="button" data-category="Learning">
-      <span class="hqCatIcon">📗</span>
+      <!-- Learn -->
+<span class="hqCatIcon"><i class="sqIcon sqIconLearn" aria-hidden="true"></i></span>
       <span class="hqCatText">
         <span class="hqCatName">Learn</span>
         <span class="hqCatDesc">เติมความรู้ทุกวัน ไปข้างหน้าอย่างมั่นใจ</span>
@@ -6848,7 +7032,8 @@ body.in-app-browser #authGate{
     </button>
 
     <button class="hqCatBtn hqCatWork" type="button" data-category="Work/Project">
-      <span class="hqCatIcon">💼</span>
+      <!-- Work -->
+<span class="hqCatIcon"><i class="sqIcon sqIconWork" aria-hidden="true"></i></span>
       <span class="hqCatText">
         <span class="hqCatName">Work</span>
         <span class="hqCatDesc">จัดการงานให้สำเร็จ พัฒนาตัวเองไม่หยุด</span>
@@ -6857,7 +7042,9 @@ body.in-app-browser #authGate{
     </button>
 
     <button class="hqCatBtn hqCatPhysical" type="button" data-category="Physical">
-      <span class="hqCatIcon">👟</span>
+      <!-- Physical -->
+<span class="hqCatIcon"><i class="sqIcon sqIconPhysical" aria-hidden="true"></i></span>
+
       <span class="hqCatText">
         <span class="hqCatName">Physical</span>
         <span class="hqCatDesc">ดูแลร่างกายให้แข็งแรง พร้อมลุยไปทุกวัน</span>
@@ -6866,7 +7053,8 @@ body.in-app-browser #authGate{
     </button>
 
     <button class="hqCatBtn hqCatConnect" type="button" data-category="Connection">
-      <span class="hqCatIcon">💗</span>
+      <!-- Connect -->
+<span class="hqCatIcon"><i class="sqIcon sqIconConnect" aria-hidden="true"></i></span>
       <span class="hqCatText">
         <span class="hqCatName">Connect</span>
         <span class="hqCatDesc">เชื่อมต่อความสัมพันธ์ที่ดี อยู่เคียงข้างกันเสมอ</span>
