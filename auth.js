@@ -45,8 +45,9 @@ function syncAuthGate(user){
   if (!gate) return;
 
   const inApp = isInAppBrowser();
-
   document.body.classList.toggle("in-app-browser", inApp);
+
+  window.sqAuthReady = true;  // ← Firebase ตอบแล้ว
 
   if (user || inApp) {
     gate.style.setProperty("display", "none", "important");

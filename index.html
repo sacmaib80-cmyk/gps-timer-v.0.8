@@ -7242,7 +7242,7 @@ input, textarea {
     </div>
   </div>
 
-<div id="authGate" class="authGate" aria-hidden="false">
+<div id="authGate" class="authGate" aria-hidden="true" style="display:none;">
   <div class="authCard">
     <div class="authBrand">
       <img src="logo-192.png" alt="SakuraQ logo" class="authBrandLogo">
@@ -15559,13 +15559,12 @@ window.checkAuthGate = function(){
   const gate = document.getElementById("authGate");
   if(!gate) return;
 
+  // มี uid = ซ่อน gate
   if(window.sqAuth?.uid){
     gate.style.display = "none";
     gate.setAttribute("aria-hidden", "true");
-  }else{
-    gate.style.display = "flex";
-    gate.setAttribute("aria-hidden", "false");
   }
+  // ไม่มี uid = ไม่ทำอะไร ให้ syncAuthGate ใน auth.js จัดการเอง
 };
 function requireAuth(){
   if(!window.sqAuth?.uid){
