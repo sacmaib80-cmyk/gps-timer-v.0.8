@@ -7420,7 +7420,12 @@ let deferredInstallPrompt = null;
 
   const KEY_TAB_MASTER = "qps_master_tab_v1";
 
-const TAB_ID = `tab_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+const _SESSION_TAB_KEY = "sq_session_tab_id";
+let TAB_ID = sessionStorage.getItem(_SESSION_TAB_KEY) || "";
+if(!TAB_ID){
+  TAB_ID = `tab_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+  sessionStorage.setItem(_SESSION_TAB_KEY, TAB_ID);
+}
 let isMasterTab = false;
 let tabHeartbeat = null;
 
@@ -7591,10 +7596,11 @@ function acquireMasterTab(){
   const current = readMasterTab();
   const now = Date.now();
 
+const staleness = isStandaloneMode() ? 12000 : 6000;
   const canTake =
     !current ||
     !current.tabId ||
-    (now - Number(current.ts || 0) > 4000);
+    (now - Number(current.ts || 0) > staleness);
 
   if(canTake){
     writeMasterTab();
@@ -7627,6 +7633,7 @@ function acquireMasterTab(){
 function startTabHeartbeat(){
   if(tabHeartbeat) clearInterval(tabHeartbeat);
 
+  const hbInterval = isStandaloneMode() ? 800 : 1500;
   tabHeartbeat = setInterval(()=>{
     if(isCurrentTabMasterNow()){
       writeMasterTab();
@@ -7636,7 +7643,7 @@ function startTabHeartbeat(){
     }
 
     renderMultiTabState();
-  }, 1500);
+  }, hbInterval);
 }
 /* =========================
   GATE HEARTBEAT
@@ -7678,25 +7685,35 @@ function stopTabHeartbeat(){
     tabHeartbeat = null;
   }
 }
+let _multiTabBannerTimer = null;
+
 function renderMultiTabState(){
-  if(!isMasterTab && state.status === "idle"){
-    // ยังไม่ต้องโชว์ตลอด เดี๋ยวรก
-    // เอาไว้ใช้ตอน user พยายาม start quest
-  }
   const banner = document.getElementById("multiTabBanner");
+  if(!banner) return;
 
-if(!banner) return;
+  if(isCurrentTabMasterNow()){
+    // master = ซ่อนทันที ไม่รอ
+    if(_multiTabBannerTimer){
+      clearTimeout(_multiTabBannerTimer);
+      _multiTabBannerTimer = null;
+    }
+    banner.classList.add("hidden");
+    document.body.classList.remove("hasMultiTabBanner");
+    return;
+  }
 
-if(isCurrentTabMasterNow()){
-  banner.classList.add("hidden");
-}else{
-  banner.classList.remove("hidden");
-}
-if(isCurrentTabMasterNow()){
-  document.body.classList.remove("hasMultiTabBanner");
-}else{
-  document.body.classList.add("hasMultiTabBanner");
-}
+  // ไม่ใช่ master = รอ debounce ก่อนโชว์
+  if(!_multiTabBannerTimer){
+    const delay = isStandaloneMode() ? 3500 : 1800;
+    _multiTabBannerTimer = setTimeout(()=>{
+      _multiTabBannerTimer = null;
+      // เช็คอีกรอบก่อนโชว์จริง
+      if(!isCurrentTabMasterNow()){
+        banner.classList.remove("hidden");
+        document.body.classList.add("hasMultiTabBanner");
+      }
+    }, delay);
+  }
 }
 function isSecondaryTab(){
   return !isCurrentTabMasterNow();
@@ -10290,7 +10307,7 @@ const day = all.days?.[todayKey] || { totalQps:0, quests:[] };
 ========================= */
 
 const SQ_DICE_RULES = {
-  cooldownMin: 15,
+  cooldownMin: 30,
   lookbackDays: 7,
   physicalCooldownDays: 3
 };
@@ -10753,9 +10770,21 @@ function rqChooseCategorySmart(energy){
   if(!allowed.length) return null;
 
   const forced = rqGetForcedCategoryByDeficit();
-if(forced && allowed.includes(forced)){
-  return forced;
-}
+  if(forced && allowed.includes(forced)){
+    return forced;
+  }
+
+  // Time-of-day soft push
+  const hour = rqGetCurrentHour();
+  let timeBoost = "";
+  if(hour >= 6  && hour < 11) timeBoost = "Learning";
+  else if(hour >= 11 && hour < 14) timeBoost = "Work/Project";
+  else if(hour >= 17 && hour < 20) timeBoost = "Physical";
+  else if(hour >= 20 && hour < 23) timeBoost = "Work/Project";
+
+  if(timeBoost && allowed.includes(timeBoost) && energy !== "low"){
+    if(Math.random() < 0.38) return timeBoost;
+  }
 
   const stats7 = rqBuild7dStats();
   const recent = rqBuildRecentCategoryStats(2);
@@ -10792,7 +10821,8 @@ if(forced && allowed.includes(forced)){
 function rqBuildLearningQuest(energy){
   const duration = rqPickDuration(energy);
   const domains = rqGetDomainsFromHistory("Learning");
-const domain = rqPickTopDomainAntiStreak(domains, "Learning") || "Learning";
+  const fallbackLearning = rqPickOne(["English","Math","Coding","Reading","Thai"]);
+const domain = rqPickTopDomainAntiStreak(domains, "Learning") || fallbackLearning;
   const type = rqClassifyLearningType(domain);
   const act = rqPickOne(SQ_DICE_GEN.learningActivities[type] || SQ_DICE_GEN.learningActivities.generic);
 
@@ -10807,8 +10837,9 @@ const domain = rqPickTopDomainAntiStreak(domains, "Learning") || "Learning";
 }
 function rqBuildWorkQuest(energy){
   const duration = rqPickDuration(energy);
-const domains = rqGetDomainsFromHistory("Work/Project");
-const domain = rqPickTopDomainAntiStreak(domains, "Work/Project") || "Work";
+  const domains = rqGetDomainsFromHistory("Work/Project");
+  const fallbackWork = rqPickOne(["Project","SakuraQ","Portfolio","System"]);
+const domain = rqPickTopDomainAntiStreak(domains, "Work/Project") || fallbackWork;
 const action = rqPickProgressedWorkAction(domain);
 const name = `${domain} • ${action}`;
 
@@ -10923,6 +10954,8 @@ function rqBuildQuestByCategory(category, energy){
 function rqValidateQuestCandidate(q, doneSet){
   if(!q) return false;
   if(doneSet.has(q.id)) return false;
+  const nameKey = normQuestName(q.name || "").toLowerCase();
+  if(doneSet.has(nameKey)) return false;
 
   if(q.category === "Connection"){
     if(q.energy !== "low") return false;
@@ -10994,9 +11027,10 @@ function rqGetDoneSet(){
 function rqSaveDoneSet(set){
   localStorage.setItem(rqDoneKey(), JSON.stringify([...set]));
 }
-function rqMarkDone(id){
+function rqMarkDone(id, name){
   const set = rqGetDoneSet();
   set.add(id);
+  if(name) set.add(normQuestName(name).toLowerCase());
   rqSaveDoneSet(set);
 }
 
@@ -11232,7 +11266,7 @@ if(!isCurrentTabMasterNow()){
   startQuest();
 
   if(state.status === "running"){
-    rqMarkDone(q.id);
+        rqMarkDone(q.id, q.name);
     rqClearSelected();
     rqTickUI();
 
@@ -13001,6 +13035,16 @@ document.addEventListener("visibilitychange", ()=>{
   checkAutoStop();
 
   // 🔥 สำคัญ: เอา master tab + restart tick กลับมา
+  // PWA re-acquire aggressive — เคลียร์ stale record ก่อนเลย
+  if(isStandaloneMode()){
+    const current = readMasterTab();
+    const now = Date.now();
+    if(current && current.tabId !== TAB_ID && (now - Number(current.ts || 0) > 4000)){
+      writeMasterTab();
+      isMasterTab = true;
+    }
+  }
+
   if(state.status === "running" || state.status === "paused"){
     const ok = acquireMasterTab();
 
