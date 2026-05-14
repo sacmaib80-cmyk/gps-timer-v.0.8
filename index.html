@@ -2945,49 +2945,115 @@ linear-gradient(
 }
 
 /* =========================
-   BOTTOM NAV
+   BOTTOM NAV v2 — Floating Pill
 ========================= */
-.bottomNav{
-  position:fixed;
-  left:0;
-  right:0;
-  bottom:0;
-  z-index:130;
-  display:grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap:0;
-  padding:8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
-  background:rgba(255,255,255,.95);
-  border-top:1px solid rgba(15,23,42,.08);
-  box-shadow:0 -10px 24px rgba(15,23,42,.06);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
+.bottomNav {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  z-index: 130;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 5px;
+  border-radius: 28px;
+  width: min(calc(100vw - 28px), 340px);
+  background: rgba(255,255,255,.96);
+  border: 1px solid rgba(148,163,184,.14);
+  box-shadow:
+    0 12px 40px rgba(15,23,42,.16),
+    0 2px 10px rgba(15,23,42,.06),
+    inset 0 1px 0 rgba(255,255,255,.90);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
-.bottomNavBtn{
-  border:0;
-  background:transparent;
-  color:var(--muted);
-  padding:8px 4px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:4px;
-  font-size:11px;
-  font-weight:800;
-  box-shadow:none;
+.bottomNavBtn {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  color: #94a3b8;
+  padding: 10px 4px 9px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .2px;
+  box-shadow: none;
+  border-radius: 22px;
+  position: relative;
+  transition:
+    color .18s ease,
+    background-color .20s ease;
 }
 
-.bottomNavBtn span:first-child{
-  font-size:18px;
-  line-height:1;
+.bottomNavBtn:hover {
+  background: rgba(139,92,246,.09);
+  color: #7c3aed;
 }
 
-.bottomNavBtn.active{
-  color:var(--ink);
-  transform:translateY(-2px);
-  transition:transform .2s ease, color .2s ease;
+.bottomNavBtn:active:not(.active) {
+  transform: scale(.94);
+  transition: transform .08s ease;
+}
+
+.bottomNavBtn.active {
+  color: #7c3aed;
+  background: linear-gradient(
+    155deg,
+    rgba(167,139,250,.18) 0%,
+    rgba(139,92,246,.09) 100%
+  );
+}
+
+.bottomNavBtn span:last-child {
+  line-height: 1;
+}
+
+/* =========================
+   NAV ICONS — mask-image CSS system
+========================= */
+.navIcon {
+  display: block;
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  background-color: currentColor;
+  transition: background-color .18s ease;
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+}
+
+/* HOME — house */
+.navIconHome {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3L22 12H19V21H14V16H10V21H5V12H2L12 3Z'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3L22 12H19V21H14V16H10V21H5V12H2L12 3Z'/%3E%3C/svg%3E");
+}
+
+/* TIMER — clock face + hands */
+.navIconTimer {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z'/%3E%3C/svg%3E");
+}
+
+/* HISTORY — 3 bars rising */
+.navIconHistory {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 20h4V8H3v12zm6 0h4V4H9v16zm6 0h4v-9h-4v9z'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 20h4V8H3v12zm6 0h4V4H9v16zm6 0h4v-9h-4v9z'/%3E%3C/svg%3E");
+}
+
+/* MENU — 3 lines, bottom shorter */
+.navIconMenu {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 5h18v2H3V5zm0 6h18v2H3v-2zm0 6h18v2H3v-2z'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 5h18v2H3V5zm0 6h18v2H3v-2zm0 6h18v2H3v-2z'/%3E%3C/svg%3E");
 }
 
 /* กัน content ชน nav */
@@ -2995,8 +3061,8 @@ linear-gradient(
   padding-bottom:0;
 }
 
-.app{
-  padding-bottom:150px;
+.app {
+  padding-bottom: 108px;
 }
 
 
@@ -5275,46 +5341,63 @@ body.in-app-browser #authGate{
 }
 
 .homeSpeechCard,
-.homeProgressCard{
-  border-radius:26px;
-  background:rgba(255,255,255,.82);
-  border:1px solid rgba(255,255,255,.82);
+.homeProgressCard {
+  border-radius: 24px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.homeProgressCard {
+  background: rgba(255,255,255,.88);
+  border: 1px solid rgba(255,255,255,.80);
   box-shadow:
     0 16px 34px rgba(15,23,42,.08),
     inset 0 1px 0 rgba(255,255,255,.85);
-  backdrop-filter:blur(10px);
-  -webkit-backdrop-filter:blur(10px);
 }
 
-.homeSpeechCard{
-  position:relative;
-  min-height:88px;
-  padding:14px 16px 14px 82px;
-  display:flex;
-  align-items:center;
-}
-
-.homeSpeechCard::after{
-  content:"";
-
-  position:absolute;
-
-  left:22px;
-  bottom:-10px;
-
-  width:22px;
-  height:22px;
-
-  background:rgba(255,255,255,.96);
-
-  border-radius:7px;
-
-  transform: rotate(45deg);
-
+.homeSpeechCard {
+  background: rgba(255,255,255,.97);
+  border: 1.5px solid rgba(139,92,246,.22);
   box-shadow:
-    2px 2px 10px rgba(15,23,42,.04);
+    0 8px 28px rgba(99,102,241,.13),
+    0 2px 8px rgba(15,23,42,.05),
+    inset 0 1px 0 rgba(255,255,255,.95);
+}
 
-  z-index:-1;
+.homeSpeechCard {
+  position: relative;
+  min-height: 80px;
+  padding: 14px 16px 14px 80px;
+  display: flex;
+  align-items: center;
+}
+
+/* tail — border layer */
+.homeSpeechCard::before {
+  content: "";
+  position: absolute;
+  left: 26px;
+  bottom: -17px;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 17px 11px 0 13px;
+  border-color: rgba(139,92,246,.22) transparent transparent transparent;
+  z-index: 1;
+}
+
+/* tail — fill layer */
+.homeSpeechCard::after {
+  content: "";
+  position: absolute;
+  left: 27px;
+  bottom: -14px;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 14px 10px 0 11px;
+  border-color: rgba(255,255,255,.97) transparent transparent transparent;
+  z-index: 2;
 }
 
 .homeSpeechAvatar{
@@ -7207,22 +7290,19 @@ input, textarea {
   <!-- Bottom Navigation -->
 <nav class="bottomNav" aria-label="Main Navigation">
   <button class="bottomNavBtn active" type="button" data-page="homeScene">
-    <span>🏠</span>
+    <span class="navIcon navIconHome"></span>
     <span>Home</span>
   </button>
-
   <button class="bottomNavBtn" type="button" data-page="appPage" data-target="timer">
-    <span>⏱️</span>
+    <span class="navIcon navIconTimer"></span>
     <span>Timer</span>
   </button>
-
   <button class="bottomNavBtn" type="button" data-page="historyPage">
-    <span>📈</span>
+    <span class="navIcon navIconHistory"></span>
     <span>History</span>
   </button>
-
   <button class="bottomNavBtn" type="button" data-page="appPage" data-target="menu">
-    <span>☰</span>
+    <span class="navIcon navIconMenu"></span>
     <span>Menu</span>
   </button>
 </nav>
@@ -13144,31 +13224,42 @@ function switchPage(pageId){
   const targetPage = document.getElementById(pageId);
   if(targetPage) targetPage.classList.add("page-active");
 
+  // ✅ update bottom nav active
+  document.querySelectorAll(".bottomNavBtn").forEach(btn=>{
+    const btnPage = btn.dataset.page;
+    const btnTarget = btn.dataset.target;
 
+    // ปุ่ม menu ไม่มี page จริง ไม่ต้องทำ active
+    if(btnTarget === "menu"){
+      btn.classList.remove("active");
+      return;
+    }
+
+    btn.classList.toggle("active", btnPage === pageId);
+  });
 
   const questBar = document.getElementById("questBar");
   if(questBar){
     questBar.style.display = (pageId === "homeScene") ? "flex" : "none";
   }
 
- if(pageId === "homeScene"){
-  requestAnimationFrame(() => {
-    renderHomeHud();
-    updateDiceVisibility();
-  });
-}else{
-  if(el.diceFab){
-    el.diceFab.style.display = (pageId === "appPage") ? "flex" : "none";
+  if(pageId === "homeScene"){
+    requestAnimationFrame(() => {
+      renderHomeHud();
+      updateDiceVisibility();
+    });
+  }else{
+    if(el.diceFab){
+      el.diceFab.style.display = (pageId === "appPage") ? "flex" : "none";
+    }
+    if(pageId === "appPage"){
+      requestAnimationFrame(updateTopNavActive);
+    }
+    if(pageId === "historyPage"){
+      renderHistoryRangeTabs();
+      renderHistoryPageStub();
+    }
   }
-if(pageId === "appPage"){
-  requestAnimationFrame(updateTopNavActive);
-}
-  if(pageId === "historyPage"){
-  renderHistoryRangeTabs();
-  renderHistoryPageStub();
-  
-}
-}
 }
   /* ===== Random Quest events ===== */
 on(el.diceBtn, "click", ()=>{
