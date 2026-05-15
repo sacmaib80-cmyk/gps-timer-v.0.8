@@ -972,11 +972,22 @@ button:disabled{
         box-shadow:none;
       }
       button.danger{
-        color: #7f1d1d;
-        background: rgba(251,113,133,.20);
-        border: 1px solid rgba(251,113,133,.34);
-        box-shadow:none;
-      }
+  color: #7f1d1d;
+  background: rgba(251,113,133,.20);
+  border: 1px solid rgba(251,113,133,.34);
+  box-shadow: none;
+}
+
+button.danger:hover{
+  background: rgba(251,113,133,.38);
+  border-color: rgba(251,113,133,.55);
+  color: #6b1111;
+}
+
+button.danger:active:not(:disabled){
+  transform: scale(.985) translateY(.5px);
+  background: rgba(251,113,133,.50);
+}
       
       button:disabled{ opacity:.45; cursor:not-allowed; }
 
@@ -1489,6 +1500,8 @@ button:disabled{
 
   cursor: grab;
 }
+
+
 
 .diceFab.dragging{
   cursor: grabbing;
@@ -7117,19 +7130,44 @@ input, textarea {
 
 /* ── Reset section ── */
 .tpResetSection {
-  background: rgba(255,255,255,.82);
+  background: linear-gradient(
+    180deg,
+    rgba(254,242,242,.92),
+    rgba(255,237,237,.85)
+  );
   border-radius: 20px;
   padding: 16px 18px;
-  box-shadow: 0 2px 0 rgba(0,0,0,.03), 0 6px 18px rgba(0,0,0,.05);
+  box-shadow:
+    0 2px 0 rgba(239,68,68,.08),
+    0 6px 18px rgba(239,68,68,.08);
   text-align: center;
   cursor: pointer;
-  border: 1px solid rgba(239,68,68,.10);
-  transition: background .16s, box-shadow .16s;
+  border: 1px solid rgba(239,68,68,.22);
+  transition: background .16s ease, box-shadow .16s ease, transform .10s ease;
 }
 
 .tpResetSection:hover {
-  background: rgba(255,245,245,.92);
-  box-shadow: 0 2px 0 rgba(239,68,68,.06), 0 8px 22px rgba(239,68,68,.08);
+  background: linear-gradient(
+    180deg,
+    rgba(254,226,226,.96),
+    rgba(252,210,210,.88)
+  );
+  box-shadow:
+    0 2px 0 rgba(239,68,68,.16),
+    0 10px 26px rgba(239,68,68,.16);
+  transform: translateY(-1px);
+}
+
+.tpResetSection:active {
+  background: linear-gradient(
+    180deg,
+    rgba(252,210,210,.98),
+    rgba(248,188,188,.92)
+  );
+  transform: scale(.98) translateY(0);
+  box-shadow:
+    0 1px 0 rgba(239,68,68,.12),
+    0 4px 12px rgba(239,68,68,.12);
 }
 
 .tpResetInner {
@@ -7323,6 +7361,82 @@ input, textarea {
     0 6px 24px rgba(109,40,217,.08),
     0 1px 0 rgba(255,255,255,.9) inset !important;
 }
+/* CSS Sparkle สำหรับ Today title */
+.tpTitleSparkle{
+  display: inline-block;
+  position: relative;
+  width: 22px;
+  height: 22px;
+  vertical-align: -3px;
+  margin-left: 2px;
+}
+
+.tpTitleSparkle::before{
+  content: "";
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: #a78bfa;
+  box-shadow:
+    0 -9px 0 1.5px #c4b5fd,
+    0  9px 0 1.5px #c4b5fd,
+    -9px 0 0 1.5px #c4b5fd,
+     9px 0 0 1.5px #c4b5fd,
+    -6px -6px 0 1px rgba(167,139,250,.6),
+     6px -6px 0 1px rgba(167,139,250,.6),
+    -6px  6px 0 1px rgba(167,139,250,.6),
+     6px  6px 0 1px rgba(167,139,250,.6);
+  animation: tpSparkleRotate 3s linear infinite;
+}
+
+@keyframes tpSparkleRotate{
+  from{ transform: translate(-50%,-50%) rotate(0deg); }
+  to{ transform: translate(-50%,-50%) rotate(360deg); }
+}
+
+/* Dice บนหน้า Home ให้ลอยสูงกว่า bottom nav */
+#homeScene.page-active ~ * .diceFab,
+#homeScene.page-active .diceFab{
+  bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+}
+.diceFab{
+  bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Reset Today Card — danger zone */
+#resetTodayBtn.danger.smallBtn{
+  width: 100%;
+  min-height: 52px;
+  border-radius: 16px;
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 900;
+
+  color: #991b1b;
+  background: linear-gradient(180deg, rgba(254,226,226,.85), rgba(254,202,202,.75));
+  border: 1px solid rgba(239,68,68,.30);
+  box-shadow:
+    0 4px 14px rgba(239,68,68,.12),
+    inset 0 1px 0 rgba(255,255,255,.65);
+
+  transition: background .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+#resetTodayBtn.danger.smallBtn:hover{
+  background: linear-gradient(180deg, rgba(254,202,202,.95), rgba(252,165,165,.85));
+  border-color: rgba(239,68,68,.55);
+  box-shadow:
+    0 6px 20px rgba(239,68,68,.22),
+    inset 0 1px 0 rgba(255,255,255,.55);
+}
+
+#resetTodayBtn.danger.smallBtn:active{
+  transform: scale(.985);
+  background: linear-gradient(180deg, rgba(252,165,165,.95), rgba(248,113,113,.85));
+  border-color: rgba(220,38,38,.65);
+}
 </style>
 </head>
 <body>
@@ -7475,12 +7589,6 @@ input, textarea {
     <div id="appScroll">
 
       
-    <div class="diceFab" id="diceFab" style="display:none;">
-  <div class="diceCd" id="diceCd">Cooldown: <b>00:00</b></div>
-  <button class="diceBtn dicePulse" id="diceBtn" type="button" aria-label="Random Quest Dice">
-    <span class="diceIcon" aria-hidden="true"></span>
-  </button>
-</div>
       <div class="container">
 
         <div class="topbar">
@@ -8092,7 +8200,7 @@ input, textarea {
   <!-- TODAY PAGE v2 -->
 <section id="todayPage" class="app page">
   <div class="tpPageHeader">
-    <div class="tpPageTitle">Today ✨</div>
+<div class="tpPageTitle">Today <span class="tpTitleSparkle" aria-hidden="true"></span></div>
     <div class="tpPageDate" id="tpPageDate">—</div>
   </div>
   <div class="tpContainer">
@@ -8541,6 +8649,15 @@ input, textarea {
     </div>
   </div>
 </div>
+
+<div class="diceFab" id="diceFab" style="display:none;">
+    <div class="diceCd" id="diceCd">Cooldown: <b>00:00</b></div>
+    <button class="diceBtn dicePulse" id="diceBtn" type="button" aria-label="Random Quest Dice">
+      <span class="diceIcon" aria-hidden="true"></span>
+    </button>
+  </div>
+
+</body>
 
 
 <script type="module" src="auth.js"></script>
@@ -9960,15 +10077,7 @@ window.addEventListener("sq-user-changed", async () => {
   loadState();
   loadGateCfg();
   loadGate();
-  console.log("[GATE after loadGate]", {
-  locked: gate.locked,
-  unlocked: gate.unlocked,
-  unlockReason: gate.unlockReason,
-  passed: gate.passed,
-  startedInTime: gate.startedInTime,
-  awaitingGateResult: gate.awaitingGateResult,
-  startedAt: gate.startedAt
-});
+
   syncGateRuntimeFromCfg();
   loadQuestSuggestions();
   loadReportDraft();
@@ -9984,6 +10093,20 @@ window.addEventListener("sq-user-changed", async () => {
   startTick();
 
   checkAuthGate();
+
+  // ✅ NEW: ถ้าบัญชีนี้มีเควสรันอยู่ → เข้าหน้า Timer ทันที
+  if(state.status === "running" || state.status === "paused"){
+    switchPage("appPage");
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>{
+        scrollToId("sec-timer");
+      });
+    });
+
+    if(state.status === "running" && window.homeRunEndTs){
+      setTimeout(()=> showHomeRunScreen(), 200);
+    }
+  }
 });
   let diceDrag = {
   active: false,
@@ -13906,6 +14029,20 @@ function clearReportFormFields(){
   if(el.reportMinutes) el.reportMinutes.value = "";
   if(el.notes) el.notes.value = "";
 
+  // clear home report inputs ด้วย
+  const homeNote = document.getElementById("homeReportNoteInput");
+  if(homeNote) homeNote.value = "";
+  const homeWhy = document.getElementById("homeReportWhyInput");
+  if(homeWhy) homeWhy.value = "";
+  const homeFrom = document.getElementById("homeReportFromInput");
+  if(homeFrom) homeFrom.value = "";
+  const homeTo = document.getElementById("homeReportToInput");
+  if(homeTo) homeTo.value = "";
+  const homeClaim = document.getElementById("homeReportClaimKeyInput");
+  if(homeClaim) homeClaim.value = "";
+  const homeProof = document.getElementById("homeReportClaimProofInput");
+  if(homeProof) homeProof.value = "";
+
   if(el.insightWhy) el.insightWhy.value = "";
   if(el.insightFrom) el.insightFrom.value = "";
   if(el.insightTo) el.insightTo.value = "";
@@ -14409,10 +14546,12 @@ function switchPage(pageId){
     requestAnimationFrame(() => {
       renderHomeHud();
       updateDiceVisibility();
+      rqShowIfEligible();
+      rqTickUI();
     });
   }else{
     if(el.diceFab){
-      el.diceFab.style.display = (pageId === "appPage") ? "flex" : "none";
+      el.diceFab.style.display = (pageId === "appPage" || pageId === "homeScene") ? "flex" : "none";
     }
     if(pageId === "appPage"){
       requestAnimationFrame(updateTopNavActive);
