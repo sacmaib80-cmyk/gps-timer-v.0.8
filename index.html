@@ -14385,9 +14385,9 @@ function syncHomeRunScreen(){
       String(sec).padStart(2,"0");
 
     if(remain <= 0 && state.status === "running"){
-  el.stopBtn?.click();
   hideHomeRunScreen();
-  showHomeReportIntro();
+  el.stopBtn?.click();
+  setTimeout(()=> showHomeReportIntro(), 80);
 }
   }
 
@@ -14423,11 +14423,15 @@ document.getElementById("homeRunStopBtn")?.addEventListener("click", ()=>{
 });
 
 document.getElementById("homeRunPlus5Btn")?.addEventListener("click", ()=>{
-  window.homeRunEndTs += 5 * 60000;
+  window.homeRunEndTs = (window.homeRunEndTs || Date.now()) + 5 * 60000;
+  state.homeRunEndTs = window.homeRunEndTs;
+  extendCurrentQuestBy(5);
 });
 
 document.getElementById("homeRunPlus10Btn")?.addEventListener("click", ()=>{
-  window.homeRunEndTs += 10 * 60000;
+  window.homeRunEndTs = (window.homeRunEndTs || Date.now()) + 10 * 60000;
+  state.homeRunEndTs = window.homeRunEndTs;
+  extendCurrentQuestBy(10);
 });
 
 /* =========================================
