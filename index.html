@@ -1626,7 +1626,7 @@ button.danger:active:not(:disabled){
 .rqOverlay.show{
   display: flex;
 }
-  .rqOverlay.show{ display:flex; }
+  .rqOverlay.show{ display:flex; pointer-events: auto; }
 
   .rqCard{
     width: min(720px, calc(100vw - 24px));
@@ -7437,6 +7437,120 @@ input, textarea {
   background: linear-gradient(180deg, rgba(252,165,165,.95), rgba(248,113,113,.85));
   border-color: rgba(220,38,38,.65);
 }
+
+/* ===== DICE ROLL OVERLAY ===== */
+.diceRollOverlay{
+  position:fixed; inset:0; z-index:18000;
+  display:none; align-items:center; justify-content:center;
+  background:rgba(9,3,22,.92);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+}
+.diceRollOverlay.show{ display:flex; }
+
+.diceRollWrap{ text-align:center; animation:diceRollWrapIn .22s ease-out both; }
+@keyframes diceRollWrapIn{
+  from{ transform:scale(.5); opacity:0; }
+  to{ transform:scale(1); opacity:1; }
+}
+
+.diceRollBig{
+  width:130px; height:130px; border-radius:30px;
+  background:linear-gradient(145deg,#fff,#f3efff);
+  box-shadow:
+    0 0 0 3px rgba(139,92,246,.4),
+    0 40px 80px rgba(139,92,246,.6),
+    inset 0 3px 8px rgba(255,255,255,.95),
+    inset 0 -6px 14px rgba(109,40,217,.08);
+  position:relative; margin:0 auto 20px;
+  animation:diceRolling .11s ease-in-out infinite;
+}
+.diceRollBig.settled{
+  animation:diceSettle .38s cubic-bezier(.17,1.5,.41,1) forwards;
+}
+@keyframes diceRolling{
+  0%  { transform:rotate(-15deg) scale(.91) translateY(3px); }
+  25% { transform:rotate(11deg)  scale(1.1) translateY(-6px); }
+  50% { transform:rotate(-9deg)  scale(.95) translateY(3px); }
+  75% { transform:rotate(13deg)  scale(1.07) translateY(-4px); }
+  100%{ transform:rotate(-15deg) scale(.91) translateY(3px); }
+}
+@keyframes diceSettle{
+  0%  { transform:rotate(11deg) scale(1.14); }
+  65% { transform:rotate(-3deg) scale(.97); }
+  100%{ transform:rotate(0deg)  scale(1); }
+}
+
+.diceRollPips{
+  position:absolute; inset:14px;
+  background:
+    radial-gradient(circle at 25% 25%, #1e1b4b 13%, transparent 15%),
+    radial-gradient(circle at 75% 25%, #1e1b4b 13%, transparent 15%),
+    radial-gradient(circle at 50% 50%, #1e1b4b 13%, transparent 15%),
+    radial-gradient(circle at 25% 75%, #1e1b4b 13%, transparent 15%),
+    radial-gradient(circle at 75% 75%, #1e1b4b 13%, transparent 15%);
+  animation:pipBlur .11s ease-in-out infinite;
+}
+@keyframes pipBlur{
+  0%,100%{ filter:blur(2.5px); opacity:.4; }
+  50%    { filter:blur(0);     opacity:1; }
+}
+.diceRollBig.settled .diceRollPips{ animation:none; filter:blur(0); opacity:1; }
+
+.diceRollLabel{
+  color:rgba(255,255,255,.92); font-size:15px;
+  font-weight:800; letter-spacing:.5px;
+  text-shadow:0 2px 8px rgba(0,0,0,.3);
+}
+
+.diceRollBig::before,.diceRollBig::after{
+  content:"✦"; position:absolute;
+  pointer-events:none;
+  animation:diceOrbitStar 1.15s ease-in-out infinite;
+}
+.diceRollBig::before{ font-size:15px; color:#c4b5fd; top:-20px; left:22px; animation-delay:0s; }
+.diceRollBig::after { font-size:10px; color:#a78bfa; bottom:-15px; right:16px; animation-delay:.58s; }
+@keyframes diceOrbitStar{
+  0%,100%{ opacity:0; transform:scale(.4) translateY(0); }
+  40%    { opacity:1; transform:scale(1.3) translateY(-10px); }
+  70%    { opacity:.6; transform:scale(.8) translateY(-17px); }
+}
+
+/* ===== DICE FAB SPARKLE (active state) ===== */
+.diceFab.diceActive::before{
+  content:"✦"; position:absolute;
+  top:-11px; right:8px; font-size:10px; color:#a78bfa;
+  pointer-events:none; z-index:5;
+  animation:diceFabStar 2.1s ease-in-out infinite;
+}
+.diceFab.diceActive::after{
+  content:"✦"; position:absolute;
+  bottom:27px; left:-9px; font-size:8px; color:#c4b5fd;
+  pointer-events:none; z-index:5;
+  animation:diceFabStar 2.1s ease-in-out infinite;
+  animation-delay:.88s;
+}
+@keyframes diceFabStar{
+  0%,100%{ opacity:0; transform:scale(.3) translateY(0); }
+  30%    { opacity:1; transform:scale(1.2) translateY(-9px); }
+  65%    { opacity:.5; transform:scale(.7) translateY(-17px); }
+}
+.diceFab.diceActive .diceBtn{
+  box-shadow:
+    0 18px 40px rgba(2,6,23,.18),
+    inset 0 2px 6px rgba(255,255,255,.9),
+    inset 0 -6px 12px rgba(2,6,23,.06),
+    0 0 0 3px rgba(139,92,246,.20),
+    0 0 28px rgba(139,92,246,.28);
+}
+
+/* ===== DICE FIX: z-index ===== */
+.diceFab {
+  z-index: 132 !important;
+  /* ต่ำกว่า homeRunScreen(140) / homeReportScreen(156) / homeResultScreen(170)
+     สูงกว่า bottomNav(130) / homeQuestFlow(125)
+     ดังนั้น: ตอนเปิดเลือกหมวด → ลูกเต๋าอยู่หน้าได้ ✓
+              ตอน run/report screen ขึ้น → JS ซ่อนด้วย display:none ✓ */
+}
 </style>
 </head>
 <body>
@@ -7637,41 +7751,6 @@ input, textarea {
 
           <div class="card">
 
-  
-
-            <div class="rqOverlay" id="rqOverlay" aria-hidden="true">
-              <div class="rqCard" role="dialog" aria-modal="true">
-                <div class="rqHead2">
-                  <div>
-                    <p class="rqTitle2">🎲 Random Quest</p>
-                    <p class="rqSub2" id="rqModalSub">เลือกพลังงาน แล้วระบบจะสุ่มเควสให้</p>
-                  </div>
-                  <button class="rqClose" id="rqClose" type="button">✕</button>
-                </div>
-
-                <div class="rqBody2">
-                  <div class="rqPickGrid">
-                    <button class="secondary" id="rqPickLow" type="button">LOW</button>
-                    <button class="secondary" id="rqPickMid" type="button">MID</button>
-                    <button class="secondary" id="rqPickHigh" type="button">HIGH</button>
-                  </div>
-
-                  <div class="rqResult2" id="rqResult2">
-                    <div class="rqBigName" id="rqBigName">—</div>
-                    <div class="rqMeta2" id="rqMeta2">—</div>
-
-                    <div class="rqActions2">
-                      <button id="rqStartNow2" type="button">Start Now</button>
-                      <button id="rqClear2" class="secondary" type="button">Clear</button>
-                    </div>
-
-                    <div class="hint" style="margin-top:10px;">
-                      cooldown 30 นาทีหลังสุ่ม • กันสุ่มซ้ำในวันเดียว • Start Now = auto-fill + cutting time
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
 
             <div class="row two">
               <div>
@@ -8650,12 +8729,55 @@ input, textarea {
   </div>
 </div>
 
+<div id="diceRollOverlay" class="diceRollOverlay">
+  <div class="diceRollWrap">
+    <div class="diceRollBig" id="diceRollBig">
+      <div class="diceRollPips"></div>
+    </div>
+    <div class="diceRollLabel" id="diceRollLabel">กำลังสุ่ม...</div>
+  </div>
+</div>
+
 <div class="diceFab" id="diceFab" style="display:none;">
     <div class="diceCd" id="diceCd">Cooldown: <b>00:00</b></div>
     <button class="diceBtn dicePulse" id="diceBtn" type="button" aria-label="Random Quest Dice">
       <span class="diceIcon" aria-hidden="true"></span>
     </button>
   </div>
+
+   <div class="rqOverlay" id="rqOverlay" aria-hidden="true">
+              <div class="rqCard" role="dialog" aria-modal="true">
+                <div class="rqHead2">
+                  <div>
+                    <p class="rqTitle2">🎲 Random Quest</p>
+                    <p class="rqSub2" id="rqModalSub">เลือกพลังงาน แล้วระบบจะสุ่มเควสให้</p>
+                  </div>
+                  <button class="rqClose" id="rqClose" type="button">✕</button>
+                </div>
+
+                <div class="rqBody2">
+                  <div class="rqPickGrid">
+                    <button class="secondary" id="rqPickLow" type="button">LOW</button>
+                    <button class="secondary" id="rqPickMid" type="button">MID</button>
+                    <button class="secondary" id="rqPickHigh" type="button">HIGH</button>
+                  </div>
+
+                  <div class="rqResult2" id="rqResult2">
+                    <div class="rqBigName" id="rqBigName">—</div>
+                    <div class="rqMeta2" id="rqMeta2">—</div>
+
+                    <div class="rqActions2">
+                      <button id="rqStartNow2" type="button">Start Now</button>
+                      <button id="rqClear2" class="secondary" type="button">Clear</button>
+                    </div>
+
+                    <div class="hint" style="margin-top:10px;">
+                      cooldown 30 นาทีหลังสุ่ม • กันสุ่มซ้ำในวันเดียว • Start Now = auto-fill + cutting time
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
 </body>
 
@@ -11655,7 +11777,8 @@ const day = all.days?.[todayKey] || { totalQps:0, quests:[] };
   renderControls();
   renderGateUX();
   renderToday();
-  setReportVisible(state.status==="stopped");
+  const _isOnAppPage = document.getElementById("appPage")?.classList.contains("page-active");
+setReportVisible(state.status==="stopped" && _isOnAppPage);
   renderUndoRedo();
   renderGatePageUI();
   renderTopMenuUI();
@@ -12445,6 +12568,29 @@ window.addEventListener("storage", (e)=>{
   }
 });
 
+function showDiceRollAnimation(callback){
+  const overlay = document.getElementById("diceRollOverlay");
+  const big     = document.getElementById("diceRollBig");
+  const label   = document.getElementById("diceRollLabel");
+
+  if(!overlay){ callback(); return; }
+
+  if(big)   big.classList.remove("settled");
+  if(label) label.textContent = "กำลังสุ่ม...";
+
+  overlay.classList.add("show");
+
+  setTimeout(()=>{
+    if(big)   big.classList.add("settled");
+    if(label) label.textContent = " พร้อมแล้ว!";
+
+    setTimeout(()=>{
+      overlay.classList.remove("show");
+      callback();
+    }, 380);
+  }, 950);
+}
+
 /* ---------- modal ---------- */
 function rqOpenModal(){
   if(!el.rqOverlay) return;
@@ -12475,7 +12621,37 @@ function rqRenderSelectedToModal(){
   if(el.rqMeta2) el.rqMeta2.textContent = `${q.category} • ${q.duration} min • ${String(q.energy).toUpperCase()}`;
 }
 
-function rqShowIfEligible(){
+/* ===== DICE VISIBILITY GUARD (NEW) ===== */
+function isDiceAllowed() {
+  // ต้องอยู่หน้า homeScene เท่านั้น
+  const onHome = document.getElementById("homeScene")?.classList.contains("page-active");
+  if (!onHome) return false;
+
+  // ซ่อนตอน running / paused
+  if (state.status === "running" || state.status === "paused") return false;
+
+  // ซ่อนตอนมี full-screen overlay ขึ้น
+  const overlayIds = [
+    "homeRunScreen",
+    "homeReportIntro",
+    "homeReportScreen",
+    "homeResultScreen"
+  ];
+  return !overlayIds.some(id => document.getElementById(id)?.classList.contains("show"));
+}
+
+function rqShowIfEligible() {
+  if (!el.diceFab || !el.diceBtn || !el.diceCd) return;
+
+  /* ===== FIX: ตรวจสิทธิ์ก่อน ===== */
+  if (!isDiceAllowed()) {
+    el.diceFab.style.display = "none";
+    return;
+  }
+  /* ===== END FIX ===== */
+
+  el.diceFab.style.display = "flex";
+
   if(!el.diceFab || !el.diceBtn || !el.diceCd) return;
 
   el.diceFab.style.display = "flex";
@@ -12559,6 +12735,10 @@ function rqTickUI(){
   if(el.rqPickHigh) el.rqPickHigh.disabled = locked;
 
   rqRenderSelectedToModal();
+
+  el.diceFab?.classList.toggle("diceActive",
+    !el.diceBtn?.disabled && !rqIsCooldown() && !rqGetSelected()
+  );
 }
 /* ---------- actions ---------- */
 function rqHandleRandom(energy){
@@ -12628,18 +12808,21 @@ if(!isCurrentTabMasterNow()){
   if(el.cutMinutes) el.cutMinutes.value = String(q.duration);
   if(el.cutMode) el.cutMode.value = "hard";
 
+  window.homeRunEndTs = Date.now() + (q.duration * 60000);
+  state.homeRunEndTs = window.homeRunEndTs;
   saveState();
   renderCutUI();
   clearNameWarn();
 
   startQuest();
 
-  if(state.status === "running"){
-        rqMarkDone(q.id, q.name);
+ if(state.status === "running"){
+    rqMarkDone(q.id, q.name);
     rqClearSelected();
     rqTickUI();
-
-      switchPage("homeScene");
+    rqCloseModal();
+    switchPage("homeScene");
+    setTimeout(()=> showHomeRunScreen(), 80);
   }
 }
   /* =========================
@@ -14510,10 +14693,15 @@ function editProfileName(){
   saveProfile(profile);
   renderHomeHud();
 }
-function updateDiceVisibility(){
-  if(!el.diceFab) return;
-  el.diceFab.style.display = "flex";
-  rqShowIfEligible();
+/* ===== แทนที่ updateDiceVisibility เดิม ===== */
+function updateDiceVisibility() {
+  if (!el.diceFab) return;
+  const ok = isDiceAllowed();
+  el.diceFab.style.display = ok ? "flex" : "none";
+  if (ok) {
+    rqShowIfEligible();
+    rqTickUI();
+  }
 }
 function switchPage(pageId){
   document.querySelectorAll(".page").forEach(page=>{
@@ -14551,7 +14739,7 @@ function switchPage(pageId){
     });
   }else{
     if(el.diceFab){
-      el.diceFab.style.display = (pageId === "appPage" || pageId === "homeScene") ? "flex" : "none";
+      el.diceFab.style.display = "none";
     }
     if(pageId === "appPage"){
       requestAnimationFrame(updateTopNavActive);
@@ -14567,30 +14755,35 @@ function switchPage(pageId){
   }
 }
   /* ===== Random Quest events ===== */
-on(el.diceBtn, "click", ()=>{
-  // ถ้ากำลังทำเควสอยู่ ไม่ให้เปิด dice
- if(state.status === "running" || state.status === "paused"){
-  showActionLockBar("อ้ะ! กำลังทำเควสอยู่ ต้องหยุดหรือส่งรายงานก่อนนะ");
-  return;
-}
+on(el.diceBtn, "click", (e) => {
+  /* FIX: drag cancel check ต้องอยู่ตรงนี้ (ก่อน logic ทุกอย่าง) */
+  if (diceDrag.moved) {
+    diceDrag.moved = false;
+    return;
+  }
+
+  /* FIX: visibility guard */
+  if (!isDiceAllowed()) return;
+
+  if (state.status === "running" || state.status === "paused") {
+    showActionLockBar("อ้ะ! กำลังทำเควสอยู่ ต้องหยุดหรือส่งรายงานก่อนนะ");
+    return;
+  }
 
   const selected = rqGetSelected();
-
-  // ถ้ามีเควสเดิมค้างอยู่ เปิดดูได้เลย
-  if(selected){
+  if (selected) {
     rqOpenModal();
     rqRenderSelectedToModal();
     return;
   }
 
-  // ไม่มีเควสเดิม ค่อยเช็ค cooldown
-  if(rqIsCooldown()){
+  if (rqIsCooldown()) {
     rqTickUI();
     showTimerWarn("ติด cooldown");
     return;
   }
 
-  rqOpenModal();
+  showDiceRollAnimation(() => rqOpenModal());
 });
   on(el.rqClose, "click", rqCloseModal);
   on(el.rqOverlay, "click", (e)=>{ if(e.target===el.rqOverlay) rqCloseModal(); });
@@ -14722,7 +14915,7 @@ const start = (clientX, clientY) => {
     const dx = clientX - diceDrag.startX;
     const dy = clientY - diceDrag.startY;
 
-    if(Math.abs(dx) > 4 || Math.abs(dy) > 4){
+    if(Math.abs(dx) > 10 || Math.abs(dy) > 10){
       diceDrag.moved = true;
     }
 
@@ -14752,15 +14945,6 @@ const start = (clientX, clientY) => {
 
   on(window, "pointerup", end);
   on(window, "pointercancel", end);
-
-  /* กัน click เปิด modal หลังลาก */
-  on(el.diceBtn, "click", (e) => {
-    if(diceDrag.moved){
-      e.preventDefault();
-      e.stopPropagation();
-      diceDrag.moved = false;
-    }
-  });
 
   /* ถ้าหน้าจอเปลี่ยนขนาด ให้บีบกลับเข้าจอ */
   on(window, "resize", () => {
@@ -15041,6 +15225,7 @@ function showHomeRunScreen(){
 
   clearInterval(homeRunSyncTimer);
   homeRunSyncTimer = setInterval(syncHomeRunScreen, 500);
+  updateDiceVisibility();
 }
 
 function hideHomeRunScreen(){
@@ -15052,6 +15237,7 @@ function hideHomeRunScreen(){
 
   clearInterval(homeRunSyncTimer);
   homeRunSyncTimer = null;
+  updateDiceVisibility();
 }
 
 function showHomeReportIntro(){
@@ -15064,6 +15250,7 @@ function showHomeReportIntro(){
 
   intro.classList.add("show");
   intro.setAttribute("aria-hidden", "false");
+  updateDiceVisibility();
 
   setTimeout(()=>{
     intro.classList.remove("show");
@@ -15166,6 +15353,7 @@ document.getElementById("homeReportBackBtn")?.addEventListener("click", ()=>{
   }
 
  hideHomeReportScreen();
+  discardReport();
   switchPage("homeScene");
 });
 
@@ -15214,12 +15402,14 @@ function showHomeReportScreen(){
   document.getElementById("homeReportStep2")?.classList.remove("show");
 
  updateHomeReportLockUI();
+  updateDiceVisibility();
 }
 
 function hideHomeReportScreen(){
   const screen = document.getElementById("homeReportScreen");
   screen?.classList.remove("show");
   screen?.setAttribute("aria-hidden","true");
+  updateDiceVisibility();
 }
 
 function showHomeResultScreen(beforeScore, afterScore){
@@ -15265,7 +15455,8 @@ function showHomeResultScreen(beforeScore, afterScore){
 document.getElementById("homeResultDoneBtn")?.addEventListener("click", ()=>{
   document.getElementById("homeResultScreen")?.classList.remove("show");
   document.getElementById("homeResultScreen")?.setAttribute("aria-hidden","true");
-  switchPage("homeScene");
+    switchPage("homeScene");
+  updateDiceVisibility();
 });
 
 let homeReportMode = "normal"; // normal | method | behavior
