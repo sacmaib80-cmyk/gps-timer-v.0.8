@@ -1629,49 +1629,61 @@ button.danger:active:not(:disabled){
   .rqOverlay.show{ display:flex; pointer-events: auto; }
 
   .rqCard{
-    width: min(720px, calc(100vw - 24px));
-    border-radius: 24px;
-    border: 1px solid rgba(255,255,255,.18);
-    background:
-      radial-gradient(700px 220px at 20% 0%, rgba(96,165,250,.18), transparent 60%),
-      radial-gradient(600px 240px at 85% 20%, rgba(34,197,94,.16), transparent 60%),
-      radial-gradient(600px 260px at 50% 110%, rgba(245,158,11,.14), transparent 60%),
-      rgba(255,255,255,.94);
-    box-shadow: 0 24px 70px rgba(0,0,0,.30);
-    overflow:hidden;
-  }
+  width: min(720px, calc(100vw - 24px));
+  border-radius: 28px;
+  border: 1px solid rgba(167,139,250,.28);
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(167,139,250,.22), transparent 52%),
+    radial-gradient(ellipse at 85% 15%, rgba(96,165,250,.14), transparent 46%),
+    radial-gradient(ellipse at 50% 100%, rgba(139,92,246,.12), transparent 55%),
+    rgba(248,246,255,.97);
+  box-shadow:
+    0 28px 80px rgba(109,40,217,.24),
+    0 8px 24px rgba(109,40,217,.12),
+    inset 0 1px 0 rgba(255,255,255,.85);
+  overflow:hidden;
+}
 
   .rqHead2{
-    padding: 14px 14px 10px;
-    display:flex;
-    align-items:flex-start;
-    justify-content:space-between;
-    gap:10px;
-    border-bottom: 1px solid rgba(15,23,42,.10);
-  }
+  padding: 16px 16px 12px;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+  border-bottom: 1px solid rgba(139,92,246,.12);
+  background: linear-gradient(180deg, rgba(139,92,246,.08), transparent);
+}
   .rqTitle2{
-    margin:0;
-    font-size: 15px;
-    font-weight: 950;
-    letter-spacing:.2px;
-  }
+  margin:0;
+  font-size: 17px;
+  font-weight: 950;
+  letter-spacing:.2px;
+  color: #3b1d8a;
+}
   .rqSub2{
-    margin:6px 0 0;
-    color: var(--muted);
-    font-size: 12px;
-    line-height:1.5;
-  }
-  .rqClose{
-    width: 36px; height: 36px;
-    border-radius: 14px;
-    border: 1px solid rgba(15,23,42,.12);
-    background: rgba(2,6,23,.04);
-    color: var(--ink);
-    font-weight: 950;
-    cursor:pointer;
-    box-shadow:none;
-    padding:0;
-  }
+  margin:6px 0 0;
+  color: rgba(91,33,182,.65);
+  font-size: 12.5px;
+  line-height:1.5;
+  font-weight: 650;
+}
+.rqClose{
+  width: 36px; height: 36px;
+  border-radius: 14px;
+  border: 1px solid rgba(139,92,246,.22);
+  background: rgba(109,40,217,.06);
+  cursor: pointer;
+  box-shadow: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s ease, border-color .15s ease;
+}
+.rqClose:hover{
+  background: rgba(109,40,217,.12);
+  border-color: rgba(139,92,246,.40);
+}
 
   .rqBody2{ padding: 12px 14px 14px; }
 
@@ -1691,33 +1703,87 @@ button.danger:active:not(:disabled){
   }
 
   .rqResult2{
-    margin-top: 12px;
-    border-radius: 20px;
-    border: 1px solid rgba(15,23,42,.12);
-    background: rgba(255,255,255,.88);
-    padding: 12px 12px;
-    display:none;
+  margin-top: 14px;
+  border-radius: 22px;
+  border: 1.5px solid rgba(34,197,94,.28);
+  background: linear-gradient(
+    160deg,
+    rgba(240,253,244,.98) 0%,
+    rgba(220,252,231,.92) 100%
+  );
+  box-shadow:
+    0 8px 28px rgba(34,197,94,.16),
+    inset 0 1px 0 rgba(255,255,255,.85);
+  padding: 14px 14px 12px;
+  display:none;
+}
+
+.rqResult2.show{
+  display:block;
+  animation: rqResultSlideIn .38s cubic-bezier(.17,1.5,.41,1) both;
+}
+
+@keyframes rqResultSlideIn{
+  from{
+    opacity: 0;
+    transform: translateY(14px) scale(.96);
   }
+  to{
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
   .rqResult2.show{ display:block; }
 
-  .rqBigName{
-    font-size: 20px;
-    font-weight: 950;
-    letter-spacing:.2px;
-  }
+.rqBigName{
+  font-size: 19px;
+  font-weight: 950;
+  color: #14532d;
+  letter-spacing: -.03em;
+  margin-bottom: 4px;
+}
   .rqMeta2{
-    margin-top: 6px;
-    color: var(--muted);
-    font-size: 12px;
-  }
+  margin-top: 5px;
+  color: rgba(22,101,52,.72);
+  font-size: 13px;
+  font-weight: 700;
+}
 
-  .rqActions2{
-    margin-top: 12px;
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    gap:10px;
-  }
-  .rqActions2 button{ border-radius: 16px; }
+ .rqActions2{
+  margin-top: 12px;
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:10px;
+}
+
+.rqActions2 button{
+  border-radius: 16px;
+  min-height: 46px;
+}
+
+/* Start Now — green */
+.rqActions2 button:first-child{
+  background: linear-gradient(180deg, #4ade80, #22c55e);
+  color: #052e16;
+  font-weight: 900;
+  box-shadow:
+    0 4px 0 #15803d,
+    0 10px 22px rgba(34,197,94,.25);
+  border: 1px solid rgba(34,197,94,.25);
+}
+
+.rqActions2 button:first-child:active{
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 #15803d, 0 4px 10px rgba(34,197,94,.15);
+}
+
+/* Clear — secondary */
+.rqActions2 button:last-child{
+  background: rgba(15,23,42,.06);
+  color: #374151;
+  border: 1px solid rgba(15,23,42,.10);
+  box-shadow: none;
+}
 
   .rqSpin{
     animation: rqSpin .55s ease-in-out;
@@ -7439,18 +7505,558 @@ input, textarea {
 }
 
 /* ===== DICE ROLL OVERLAY ===== */
-.diceRollOverlay{
-  position:fixed; inset:0; z-index:18000;
-  display:none; align-items:center; justify-content:center;
-  background:rgba(9,3,22,.92);
-  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+/* ===== RQ OVERLAY REDESIGN ===== */
+.rqBatteryIcon{
+  width: 28px;
+  height: 14px;
+  border: 2.5px solid #6d28d9;
+  border-radius: 4px;
+  position: relative;
+  flex: 0 0 28px;
 }
-.diceRollOverlay.show{ display:flex; }
+.rqBatteryIcon::before{
+  content:"";
+  position:absolute;
+  right:-6px;
+  top:50%;
+  transform:translateY(-50%);
+  width:4px;
+  height:7px;
+  background:#6d28d9;
+  border-radius:0 2px 2px 0;
+}
+.rqBatteryIcon::after{
+  content:"";
+  position:absolute;
+  left:2px;top:2px;bottom:2px;
+  width:60%;
+  background:#6d28d9;
+  border-radius:2px;
+}
+.rqCloseX{
+  display:block;
+  width:12px; height:12px;
+  position:relative;
+  flex:0 0 auto;
+}
+.rqCloseX::before,
+.rqCloseX::after{
+  content:"";
+  position:absolute;
+  left:50%; top:50%;
+  width:12px; height:2px;
+  background:rgba(109,40,217,.55);
+  border-radius:999px;
+}
+.rqCloseX::before{ transform:translate(-50%,-50%) rotate(45deg); }
+.rqCloseX::after{  transform:translate(-50%,-50%) rotate(-45deg); }
 
-.diceRollWrap{ text-align:center; animation:diceRollWrapIn .22s ease-out both; }
-@keyframes diceRollWrapIn{
-  from{ transform:scale(.5); opacity:0; }
-  to{ transform:scale(1); opacity:1; }
+/* Slider wrap */
+.rqEnergySliderWrap{
+  margin: 0 0 16px;
+  padding: 20px 16px 14px;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(167,139,250,.18), transparent 65%),
+    linear-gradient(160deg, rgba(139,92,246,.10), rgba(167,139,250,.06));
+  border-radius: 22px;
+  border: 1.5px solid rgba(139,92,246,.20);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
+}
+
+.rqSliderTrackOuter{
+  position: relative;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.rqSliderGradientTrack{
+  position: absolute;
+  left: 0; right: 0;
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    #ff3b5c 0%,
+    #ff7a00 28%,
+    #fbbf24 50%,
+    #86efac 72%,
+    #16a34a 100%
+  );
+  box-shadow:
+    0 2px 12px rgba(139,92,246,.20),
+    inset 0 1px 0 rgba(255,255,255,.35);
+  pointer-events: none;
+}
+
+.rqEnergySliderInput{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 3;
+  margin: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.rqSliderThumb{
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: white;
+  border: 3px solid #7c3aed;
+  box-shadow: 0 0 0 4px rgba(124,58,237,.18), 0 4px 12px rgba(0,0,0,.15);
+  pointer-events: none;
+  z-index: 2;
+  transition: left .1s ease, box-shadow .15s ease;
+  left: 50%;
+}
+
+/* Energy Labels */
+.rqEnergyLabels{
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.rqEnergyCol{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 6px;
+  border-radius: 16px;
+  transition: background .22s ease, transform .16s ease;
+  cursor: pointer;
+}
+
+.rqEnergyCol.active{
+  background: rgba(109,40,217,.12);
+  transform: translateY(-2px);
+  border-radius: 16px;
+}
+
+.rqEnergyCol.active{
+  background: rgba(109,40,217,.10);
+}
+
+.rqEnergyTitle{
+  font-size: 15px;
+  font-weight: 1000;
+  letter-spacing: .5px;
+  line-height: 1.1;
+}
+
+.rqEnergyDesc{
+  font-size: 12px;
+  font-weight: 750;
+  color: #2d1b6e;
+  text-align: center;
+}
+
+.rqEnergySub{
+  font-size: 10.5px;
+  font-weight: 600;
+  color: rgba(109,40,217,.55);
+  text-align: center;
+}
+
+.rqEnergyDot{
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  margin-top: 5px;
+  box-shadow: 0 0 10px currentColor;
+}
+
+/* Roll Button */
+.rqRollBtn{
+  width: 100%;
+  min-height: 58px;
+  border-radius: 22px;
+  font-size: 18px;
+  font-weight: 950;
+  color: white;
+  letter-spacing: -.01em;
+
+  background: linear-gradient(
+    180deg,
+    #9f71f8 0%,
+    #7c3aed 45%,
+    #6d28d9 100%
+  );
+
+  border: none;
+
+  box-shadow:
+    0 6px 0 #4c1d95,
+    0 18px 40px rgba(109,40,217,.40),
+    inset 0 1px 0 rgba(255,255,255,.30);
+
+  position: relative;
+  overflow: hidden;
+
+  transition: transform .12s ease, box-shadow .12s ease;
+  margin-bottom: 4px;
+
+  cursor: pointer;
+}
+
+/* shimmer sweep */
+.rqRollBtn::before{
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -75%;
+  width: 50%;
+  height: 200%;
+  background: linear-gradient(
+    105deg,
+    transparent 20%,
+    rgba(255,255,255,.55) 50%,
+    transparent 80%
+  );
+  border-radius: inherit;
+  animation: rqBtnShimmer 2.2s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.rqRollBtn > *{
+  position: relative;
+  z-index: 2;
+}
+
+.rqRollBtn:active:not(:disabled){
+  transform: translateY(5px);
+  box-shadow:
+    0 1px 0 #4c1d95,
+    0 8px 18px rgba(109,40,217,.22);
+}
+
+.rqRollBtn:disabled{
+  opacity: .45;
+  cursor: not-allowed;
+  animation: none;
+}
+
+.rqRollBtn:disabled::before{
+  animation: none;
+}
+
+.rqRollBtnSparkle{
+  display:inline-block; width:18px; height:18px;
+  position:relative; vertical-align:-4px; margin-right:7px;
+}
+.rqRollBtnSparkle::before{
+  content:"";
+  position:absolute; left:50%; top:50%;
+  transform:translate(-50%,-50%);
+  width:6px; height:6px; border-radius:50%;
+  background:#fff;
+  box-shadow:
+    0 -8px 0 1.5px rgba(255,255,255,.9),
+    0  8px 0 1.5px rgba(255,255,255,.9),
+    -8px 0 0 1.5px rgba(255,255,255,.9),
+     8px 0 0 1.5px rgba(255,255,255,.9),
+    -5px -5px 0 1px rgba(255,255,255,.65),
+     5px -5px 0 1px rgba(255,255,255,.65),
+    -5px  5px 0 1px rgba(255,255,255,.65),
+     5px  5px 0 1px rgba(255,255,255,.65);
+  animation: rqSparkleRot 3s linear infinite;
+}
+@keyframes rqSparkleRot{
+  from{ transform:translate(-50%,-50%) rotate(0deg); }
+  to{ transform:translate(-50%,-50%) rotate(360deg); }
+}
+
+@keyframes rqBtnShimmer{
+  0%{
+    left: -75%;
+    opacity: 0;
+  }
+  15%{
+    opacity: 1;
+  }
+  60%{
+    left: 125%;
+    opacity: 1;
+  }
+  61%, 100%{
+    left: 125%;
+    opacity: 0;
+  }
+}
+
+/* ซ่อน result เก่าใน energy modal */
+.rqResult2{ display:none !important; }
+
+/* =========================
+   RQ RESULT OVERLAY — Premium Separate Card
+========================= */
+.rqResultOverlay{
+  position:fixed; inset:0; z-index:10065;
+  display:none; align-items:center; justify-content:center;
+  padding:20px;
+  background:
+    radial-gradient(circle at 30% 28%, rgba(139,92,246,.38), transparent 52%),
+    radial-gradient(circle at 72% 68%, rgba(109,40,217,.28), transparent 50%),
+    rgba(10,5,28,.82);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+}
+.rqResultOverlay.show{ display:flex; }
+
+.rqResultCard{
+  width:min(360px, calc(100vw - 28px));
+  border-radius:34px;
+  background: linear-gradient(
+    160deg,
+    rgba(255,255,255,.99) 0%,
+    rgba(248,244,255,.97) 50%,
+    rgba(239,235,255,.95) 100%
+  );
+  border:1px solid rgba(139,92,246,.24);
+  box-shadow:
+    0 36px 90px rgba(109,40,217,.45),
+    0 0 0 1px rgba(255,255,255,.6) inset;
+  overflow:hidden;
+  text-align:center;
+  padding:36px 24px 26px;
+  position:relative;
+  animation: rqResPop .42s cubic-bezier(.17,1.5,.41,1) both;
+}
+
+@keyframes rqResPop{
+  0%{ opacity:0; transform:scale(.68) translateY(28px); }
+  100%{ opacity:1; transform:scale(1) translateY(0); }
+}
+
+/* shimmer bar ด้านบน */
+.rqResultCard::before{
+  content:"";
+  position:absolute; left:18px; right:18px; top:10px;
+  height:5px; border-radius:999px;
+  background:linear-gradient(
+    90deg, #a78bfa, #7c3aed, #c4b5fd, #7c3aed, #a78bfa
+  );
+  background-size:250% 100%;
+  animation: rqResBarFlow 2.8s linear infinite;
+  box-shadow:0 0 20px rgba(139,92,246,.50);
+}
+@keyframes rqResBarFlow{
+  0%{ background-position:0% 50%; }
+  100%{ background-position:250% 50%; }
+}
+
+/* floating stars background */
+.rqResultCard::after{
+  content:"✦  ✦  ✦";
+  position:absolute;
+  top:18px; left:0; right:0;
+  text-align:center;
+  font-size:10px;
+  color:rgba(167,139,250,.25);
+  letter-spacing:22px;
+  pointer-events:none;
+  animation:rqResStarsFade 2.4s ease-in-out infinite;
+}
+@keyframes rqResStarsFade{
+  0%,100%{ opacity:.2; }
+  50%{ opacity:.6; }
+}
+
+.rqResultEmojiWrap{
+  width:84px; height:84px;
+  border-radius:28px;
+  background:
+    radial-gradient(circle at 30% 22%, rgba(255,255,255,.9), transparent 45%),
+    linear-gradient(135deg, rgba(167,139,250,.24), rgba(124,58,237,.16));
+  border:2px solid rgba(139,92,246,.20);
+  display:flex; align-items:center; justify-content:center;
+  font-size:40px;
+  margin:0 auto 16px;
+  box-shadow:
+    0 10px 28px rgba(109,40,217,.18),
+    inset 0 1px 0 rgba(255,255,255,.85);
+  animation:rqResEmojiFloat 2.4s ease-in-out infinite;
+}
+@keyframes rqResEmojiFloat{
+  0%,100%{ transform:translateY(0) scale(1); }
+  50%{ transform:translateY(-6px) scale(1.06); }
+}
+
+.rqResultEmojiWrap .sqIcon{
+  transform:scale(2.0);
+  flex:0 0 auto;
+}
+.rqResultEmojiWrap .sqIconConnect{
+  transform:scale(2.0) rotate(-45deg) translateY(1px) !important;
+  display:block;
+  margin:auto;
+}
+
+.rqResultLabel{
+  font-size:11px; font-weight:900;
+  color:#7c3aed; letter-spacing:1.4px;
+  text-transform:uppercase; margin-bottom:10px; opacity:.75;
+}
+
+.rqResultName{
+  font-size:21px; font-weight:950;
+  color:#1e1b4b; letter-spacing:-.03em;
+  line-height:1.25; margin-bottom:14px;
+  padding:0 4px;
+}
+
+.rqResultMeta{
+  display:flex; align-items:center;
+  justify-content:center; gap:8px;
+  flex-wrap:wrap; margin-bottom:28px;
+}
+
+.rqResultBadge{
+  padding:5px 13px; border-radius:999px;
+  font-size:12px; font-weight:800;
+}
+.rqResultBadgeCat{
+  background:rgba(109,40,217,.10); color:#6d28d9;
+  border:1px solid rgba(109,40,217,.18);
+}
+.rqResultBadgeDur{
+  background:rgba(34,197,94,.10); color:#166534;
+  border:1px solid rgba(34,197,94,.18);
+}
+.rqResultBadgeEnergy{
+  background:rgba(245,158,11,.10); color:#92400e;
+  border:1px solid rgba(245,158,11,.20);
+}
+
+/* START button */
+.rqResultStartBtn{
+  width:100%; min-height:60px;
+  border-radius:22px;
+  font-size:19px; font-weight:1000;
+  letter-spacing:-.01em; color:white;
+  position:relative; overflow:hidden; cursor:pointer;
+  margin-bottom:10px; border:none;
+  background:linear-gradient(180deg,#9f71f8 0%,#7c3aed 45%,#6d28d9 100%);
+  box-shadow:
+    0 8px 0 #4c1d95,
+    0 20px 44px rgba(109,40,217,.45),
+    inset 0 1px 0 rgba(255,255,255,.28);
+  transition: transform .1s ease, box-shadow .1s ease;
+}
+.rqResultStartBtn::before{
+  content:"";
+  position:absolute; top:-50%; left:-80%;
+  width:50%; height:200%;
+  background:linear-gradient(
+    105deg,
+    transparent 20%,
+    rgba(255,255,255,.70) 50%,
+    transparent 80%
+  );
+  animation:rqResShimmer 1.7s ease-in-out infinite;
+  pointer-events:none; z-index:1;
+}
+@keyframes rqResShimmer{
+  0%{ left:-80%; opacity:0; }
+  14%{ opacity:1; }
+  58%{ left:130%; opacity:1; }
+  59%,100%{ left:130%; opacity:0; }
+}
+.rqResultStartBtn > *{ position:relative; z-index:2; }
+.rqResultStartBtn:active:not(:disabled){
+  transform:translateY(6px);
+  box-shadow:0 2px 0 #4c1d95, 0 8px 18px rgba(109,40,217,.22);
+}
+
+/* sparkle icon ในปุ่ม */
+.rqResultBtnSparkle{
+  display:inline-block; width:20px; height:20px;
+  position:relative; vertical-align:-5px; margin-right:8px;
+}
+.rqResultBtnSparkle::before{
+  content:"";
+  position:absolute; left:50%; top:50%;
+  transform:translate(-50%,-50%);
+  width:6px; height:6px; border-radius:50%;
+  background:#fff;
+  box-shadow:
+    0 -9px 0 1.5px rgba(255,255,255,.95),
+    0  9px 0 1.5px rgba(255,255,255,.95),
+    -9px 0 0 1.5px rgba(255,255,255,.95),
+     9px 0 0 1.5px rgba(255,255,255,.95),
+    -6px -6px 0 1px rgba(255,255,255,.7),
+     6px -6px 0 1px rgba(255,255,255,.7),
+    -6px  6px 0 1px rgba(255,255,255,.7),
+     6px  6px 0 1px rgba(255,255,255,.7);
+  animation:rqResSpkRot 2s linear infinite;
+}
+@keyframes rqResSpkRot{
+  from{ transform:translate(-50%,-50%) rotate(0deg); }
+  to{ transform:translate(-50%,-50%) rotate(360deg); }
+}
+
+/* star burst container */
+.rqResultStars{
+  position:absolute; inset:0;
+  pointer-events:none; overflow:visible; z-index:3;
+}
+
+.rqResultClearBtn{
+  width:100%; min-height:50px;
+  border-radius:16px; font-size:14px; font-weight:800;
+  color:#6d28d9;
+  background:rgba(109,40,217,.10);
+  border:1.5px solid rgba(109,40,217,.24);
+  box-shadow:0 2px 0 rgba(109,40,217,.12);
+  cursor:pointer;
+  margin-top:8px;
+  transition:background .18s ease, border-color .18s ease, transform .12s ease, box-shadow .12s ease;
+}
+.rqResultClearBtn:hover{
+  background:rgba(109,40,217,.16);
+  border-color:rgba(109,40,217,.38);
+  box-shadow:0 6px 16px rgba(109,40,217,.18);
+}
+.rqResultClearBtn:active{
+  transform:scale(.97);
+  box-shadow:none;
+}
+
+.rqResultHint{
+  margin-top:12px;
+  font-size:11px; font-weight:600;
+  color:rgba(109,40,217,.40); line-height:1.4;
+}
+
+.diceRollOverlay{
+  position:fixed;
+  inset:0;
+  z-index:10080;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(10,5,28,.88);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
+.diceRollOverlay.show{
+  display:flex;
+}
+.diceRollWrap{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:22px;
 }
 
 .diceRollBig{
@@ -8729,6 +9335,36 @@ input, textarea {
   </div>
 </div>
 
+<!-- RQ RESULT OVERLAY — Premium Separate -->
+<div id="rqResultOverlay" class="rqResultOverlay" aria-hidden="true">
+  <div class="rqResultCard" role="dialog" aria-modal="true">
+
+    <div class="rqResultEmojiWrap" id="rqResEmoji">⚡</div>
+    <div class="rqResultLabel">Quest สุ่มได้แล้ว!</div>
+    <div class="rqResultName" id="rqResName">—</div>
+
+    <div class="rqResultMeta">
+      <span class="rqResultBadge rqResultBadgeCat" id="rqResCat">—</span>
+      <span class="rqResultBadge rqResultBadgeDur" id="rqResDur">—</span>
+      <span class="rqResultBadge rqResultBadgeEnergy" id="rqResEnergy">—</span>
+    </div>
+
+    <button id="rqResultStartBtn" class="rqResultStartBtn" type="button">
+      <span class="rqResultStars" id="rqResultBtnStars"></span>
+      <span class="rqResultBtnSparkle"></span>
+      เริ่มเลย!
+    </button>
+
+    <button id="rqResultClearBtn" class="rqResultClearBtn" type="button">
+      ยกเลิก
+    </button>
+
+    <div class="rqResultHint">
+      cooldown 30 นาทีหลังสุ่ม 
+    </div>
+  </div>
+</div>
+
 <div id="diceRollOverlay" class="diceRollOverlay">
   <div class="diceRollWrap">
     <div class="diceRollBig" id="diceRollBig">
@@ -8746,38 +9382,78 @@ input, textarea {
   </div>
 
    <div class="rqOverlay" id="rqOverlay" aria-hidden="true">
-              <div class="rqCard" role="dialog" aria-modal="true">
-                <div class="rqHead2">
-                  <div>
-                    <p class="rqTitle2">🎲 Random Quest</p>
-                    <p class="rqSub2" id="rqModalSub">เลือกพลังงาน แล้วระบบจะสุ่มเควสให้</p>
-                  </div>
-                  <button class="rqClose" id="rqClose" type="button">✕</button>
-                </div>
+  <div class="rqCard" role="dialog" aria-modal="true">
 
-                <div class="rqBody2">
-                  <div class="rqPickGrid">
-                    <button class="secondary" id="rqPickLow" type="button">LOW</button>
-                    <button class="secondary" id="rqPickMid" type="button">MID</button>
-                    <button class="secondary" id="rqPickHigh" type="button">HIGH</button>
-                  </div>
+    <div class="rqHead2">
+      <div class="rqBatteryIcon" aria-hidden="true"></div>
+      <div>
+        <p class="rqTitle2">Random Quest</p>
+        <p class="rqSub2" id="rqModalSub">เลือกพลังงาน แล้วระบบจะสุ่มเควสให้</p>
+      </div>
+      <button class="rqClose" id="rqClose" type="button">
+        <span class="rqCloseX"></span>
+      </button>
+    </div>
 
-                  <div class="rqResult2" id="rqResult2">
-                    <div class="rqBigName" id="rqBigName">—</div>
-                    <div class="rqMeta2" id="rqMeta2">—</div>
+    <div class="rqBody2">
 
-                    <div class="rqActions2">
-                      <button id="rqStartNow2" type="button">Start Now</button>
-                      <button id="rqClear2" class="secondary" type="button">Clear</button>
-                    </div>
+      <!-- Energy Slider -->
+      <div class="rqEnergySliderWrap">
+        <div class="rqSliderTrackOuter">
+          <div class="rqSliderGradientTrack"></div>
+          <input
+            type="range"
+            id="rqEnergySlider"
+            class="rqEnergySliderInput"
+            min="0" max="2" step="1" value="1"
+          >
+          <div class="rqSliderThumb" id="rqSliderThumb"></div>
+        </div>
 
-                    <div class="hint" style="margin-top:10px;">
-                      cooldown 30 นาทีหลังสุ่ม • กันสุ่มซ้ำในวันเดียว • Start Now = auto-fill + cutting time
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+        <div class="rqEnergyLabels">
+          <div class="rqEnergyCol" data-energy="low">
+            <span class="rqEnergyTitle" style="color:#ef4444">LOW</span>
+            <span class="rqEnergyDesc">พลังงานต่ำ</span>
+            <span class="rqEnergySub">เหนื่อยมาก</span>
+            <span class="rqEnergyDot" style="background:#ef4444"></span>
+          </div>
+          <div class="rqEnergyCol" data-energy="mid">
+            <span class="rqEnergyTitle" style="color:#f59e0b">MID</span>
+            <span class="rqEnergyDesc">พลังงานกลาง</span>
+            <span class="rqEnergySub">เหนื่อยปานกลาง</span>
+            <span class="rqEnergyDot" style="background:#f59e0b"></span>
+          </div>
+          <div class="rqEnergyCol" data-energy="high">
+            <span class="rqEnergyTitle" style="color:#22c55e">HIGH</span>
+            <span class="rqEnergyDesc">พลังงานสูง</span>
+            <span class="rqEnergySub">เหนื่อยน้อย</span>
+            <span class="rqEnergyDot" style="background:#22c55e"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Roll Button -->
+      <button id="rqRollBtn" class="rqRollBtn" type="button">
+        <span class="rqRollBtnSparkle"></span>
+        สุ่มเควสให้ฉัน!
+      </button>
+
+      <!-- Result -->
+      <div class="rqResult2" id="rqResult2">
+        <div class="rqBigName" id="rqBigName">—</div>
+        <div class="rqMeta2" id="rqMeta2">—</div>
+        <div class="rqActions2">
+          <button id="rqStartNow2" type="button">Start Now</button>
+          <button id="rqClear2" class="secondary" type="button">Clear</button>
+        </div>
+        <div class="hint" style="margin-top:10px;">
+          cooldown 30 นาทีหลังสุ่ม • กันสุ่มซ้ำในวันเดียว
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
 
 </body>
 
@@ -12606,6 +13282,44 @@ function rqCloseModal(){
   document.body.style.overflow = "";
 }
 
+/* ===== RQ RESULT OVERLAY HELPERS ===== */
+function rqOpenResultOverlay(quest){
+  const overlay = document.getElementById("rqResultOverlay");
+  if(!overlay || !quest) return;
+
+    const catIconMap = {
+    "Learning":    '<i class="sqIcon sqIconLearn" aria-hidden="true"></i>',
+    "Work/Project":'<i class="sqIcon sqIconWork" aria-hidden="true"></i>',
+    "Physical":    '<i class="sqIcon sqIconPhysical" aria-hidden="true"></i>',
+    "Connection":  '<i class="sqIcon sqIconConnect" aria-hidden="true"></i>'
+  
+  };
+
+  const emojiEl  = document.getElementById("rqResEmoji");
+  const nameEl   = document.getElementById("rqResName");
+  const catEl    = document.getElementById("rqResCat");
+  const durEl    = document.getElementById("rqResDur");
+  const energyEl = document.getElementById("rqResEnergy");
+
+  if(emojiEl)  emojiEl.innerHTML = catIconMap[quest.category] || '<i class="sqIcon sqIconLearn" aria-hidden="true"></i>';
+  if(nameEl)   nameEl.textContent   = quest.name;
+  if(catEl)    catEl.textContent    = (quest.category||"").replace("Work/Project","Work");
+  if(durEl)    durEl.textContent    = `${quest.duration} min`;
+  if(energyEl) energyEl.textContent = String(quest.energy||"").toUpperCase();
+
+  overlay.classList.add("show");
+  overlay.setAttribute("aria-hidden","false");
+  document.body.style.overflow = "hidden";
+}
+
+function rqCloseResultOverlay(){
+  const overlay = document.getElementById("rqResultOverlay");
+  if(!overlay) return;
+  overlay.classList.remove("show");
+  overlay.setAttribute("aria-hidden","true");
+  document.body.style.overflow = "";
+}
+
 /* ---------- render ---------- */
 function rqRenderSelectedToModal(){
   const q = rqGetSelected();
@@ -12753,30 +13467,32 @@ function rqHandleRandom(energy){
     return;
   }
 
-  el.diceBtn?.classList.add("rqSpin");
-  setTimeout(()=> el.diceBtn?.classList.remove("rqSpin"), 560);
+  // ปิด modal ก่อน เล่น animation กลางจอ แล้วค่อยเปิดใหม่
+  rqCloseModal();
 
-  let res = null;
+  showDiceRollAnimation(() => {
+    let res = null;
+    try{
+      res = rqPick(energy);
+    }catch(err){
+      console.error("[RQ] rqPick crashed:", err);
+      showTimerWarn("Random Quest พังที่ logic");
+      return;
+    }
 
-  try{
-    res = rqPick(energy);
-  }catch(err){
-    console.error("[RQ] rqPick crashed:", err);
-    showTimerWarn("Random Quest พังที่ logic");
-    return;
-  }
+    if(!res || !res.ok || !res.quest){
+      showTimerWarn("วันนี้สุ่มไม่เจอเควสที่สมเหตุสมผลแล้ว");
+      return;
+    }
 
-  if(!res || !res.ok || !res.quest){
-    showTimerWarn("วันนี้สุ่มไม่เจอเควสที่สมเหตุสมผลแล้ว");
-    return;
-  }
-
-  rqSetSelected(res.quest);
-  rqSetCooldown();
-  rqTickUI();
+    rqSetSelected(res.quest);
+    rqSetCooldown();
+    rqTickUI();
+    rqOpenResultOverlay(res.quest);
+  });
 }
 
-function rqStartNow(){
+async function rqStartNow(){
   if(state.status !== "idle"){
     showTimerWarn("ต้องอยู่ Idle ก่อน");
     return;
@@ -12814,9 +13530,9 @@ if(!isCurrentTabMasterNow()){
   renderCutUI();
   clearNameWarn();
 
-  startQuest();
+  await startQuest();
 
- if(state.status === "running"){
+  if(state.status === "running"){
     rqMarkDone(q.id, q.name);
     rqClearSelected();
     rqTickUI();
@@ -14772,8 +15488,7 @@ on(el.diceBtn, "click", (e) => {
 
   const selected = rqGetSelected();
   if (selected) {
-    rqOpenModal();
-    rqRenderSelectedToModal();
+    rqOpenResultOverlay(selected);
     return;
   }
 
@@ -14783,28 +15498,95 @@ on(el.diceBtn, "click", (e) => {
     return;
   }
 
-  showDiceRollAnimation(() => rqOpenModal());
+  rqOpenModal();
 });
   on(el.rqClose, "click", rqCloseModal);
   on(el.rqOverlay, "click", (e)=>{ if(e.target===el.rqOverlay) rqCloseModal(); });
 
-  on(el.rqPickLow, "click", ()=> rqHandleRandom("low"));
-  on(el.rqPickMid, "click", ()=> rqHandleRandom("mid"));
-  on(el.rqPickHigh, "click", ()=> rqHandleRandom("high"));
+  // Energy slider logic
+(function initRqSlider(){
+  const slider = document.getElementById("rqEnergySlider");
+  const thumb = document.getElementById("rqSliderThumb");
+  const cols = document.querySelectorAll(".rqEnergyCol");
+
+  const energyMap = ["low","mid","high"];
+
+  function updateSliderUI(val){
+    const pct = (val / 2) * 100;
+    if(thumb) thumb.style.left = `${pct}%`;
+    cols.forEach((col, i) => col.classList.toggle("active", i === val));
+  }
+
+  if(slider){
+    slider.addEventListener("input", ()=>{
+      updateSliderUI(Number(slider.value));
+    });
+    updateSliderUI(Number(slider.value));
+  }
+
+  cols.forEach((col, i) => {
+    col.addEventListener("click", ()=>{
+      if(slider) slider.value = i;
+      updateSliderUI(i);
+    });
+  });
+
+  window._getRqSelectedEnergy = function(){
+    return energyMap[Number(slider?.value ?? 1)];
+  };
+})();
+
+// Roll button
+on(document.getElementById("rqRollBtn"), "click", ()=>{
+  const energy = window._getRqSelectedEnergy?.() || "mid";
+  rqHandleRandom(energy);
+});
 
   on(el.rqStartNow2, "click", ()=>{
     rqStartNow();
     if(state.status === "running") rqCloseModal();
   });
-  on(el.rqClear2, "click", ()=>{
-    rqClearSelected();
-    rqTickUI();
-  });
-  on(window, "keydown", (e)=>{
-  if(e.key === "Escape"){
-    closeTopMenu();
-    closeGatePage();
-    hideTooltip();
+  /* Result overlay buttons */
+on(document.getElementById("rqResultStartBtn"), "click", ()=>{
+  rqCloseResultOverlay();
+  rqStartNow();
+});
+
+on(document.getElementById("rqResultClearBtn"), "click", ()=>{
+  rqClearSelected();
+  rqTickUI();
+  rqCloseResultOverlay();
+});
+
+on(document.getElementById("rqResultOverlay"), "click", (e)=>{
+  if(e.target.id === "rqResultOverlay") rqCloseResultOverlay();
+});
+
+/* Star burst on Start button */
+document.getElementById("rqResultStartBtn")?.addEventListener("pointerdown", function(e){
+  const stars = document.getElementById("rqResultBtnStars");
+  if(!stars) return;
+  const count = 14;
+  const rect  = this.getBoundingClientRect();
+  const cx    = e.clientX - rect.left;
+  const cy    = e.clientY - rect.top;
+
+  for(let i = 0; i < count; i++){
+    const s   = document.createElement("span");
+    const ang = (360 / count) * i;
+    const d   = 34 + Math.random() * 24;
+    s.style.cssText = `
+      position:absolute; width:7px; height:7px;
+      border-radius:50%; background:rgba(255,255,255,.9);
+      left:${cx}px; top:${cy}px;
+      --tx:${Math.cos(ang * Math.PI / 180) * d}px;
+      --ty:${Math.sin(ang * Math.PI / 180) * d}px;
+      animation:starBurst .65s ease-out forwards;
+      animation-delay:${i * 14}ms;
+      pointer-events:none;
+    `;
+    stars.appendChild(s);
+    s.addEventListener("animationend", ()=> s.remove(), { once:true });
   }
 });
 /* ===== Draft autosave (mobile safe) ===== */
@@ -17565,9 +18347,29 @@ function renderTodayPage(){
   checkAutoStop();
   loadReportDraft();
 
+  // กรณี running แต่ไม่มี startTs = บัค
   if(state.status==="running" && !state.startTs){
     state.status="paused";
     state.startTs=null;
+    saveState();
+  }
+
+  // กรณีข้ามวัน: ถ้า status เป็น running/paused แต่ startDateKey เป็นเมื่อวาน
+  // ให้ discard อัตโนมัติ ไม่แสดงหน้า report เก่า
+  if(
+    (state.status === "running" || state.status === "paused" || state.status === "stopped") &&
+    state.startDateKey &&
+    state.startDateKey !== localDateKey()
+  ){
+    // เควสจากวันก่อน — clear ทิ้ง ไม่ให้โชว์ report หลอก
+    state.status = "idle";
+    state.startTs = null;
+    state.elapsedBefore = 0;
+    state.lastElapsedMs = 0;
+    state.startDateKey = null;
+    state.pendingSegments = [];
+    clearCutDeadline();
+    clearReportDraft();
     saveState();
   }
 
@@ -17605,6 +18407,12 @@ function renderTodayPage(){
 
   setupHomeNameEdit();
 renderHomeName();
+
+// ถ้ายังมี quest running/paused อยู่ ให้เข้าหน้า home + แสดง run screen
+  if((state.status === "running" || state.status === "paused") && window.homeRunEndTs){
+    switchPage("homeScene");
+    setTimeout(()=> showHomeRunScreen(), 200);
+  }
 
   startTick();
 
